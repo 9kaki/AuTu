@@ -64,23 +64,17 @@ jobs:
           ALIAS_NAME: ${{ secrets.ALIAS_NAME || secrets.KEY_ALIAS }}
           ALIAS_PASS: ${{ secrets.ALIAS_PASS || secrets.KEY_PASSWORD }}
         run: |
-          if [ -n "$KEYSTORE_BASE64" ]; then
+          if [ -n "$KEYSTORE_BASE64" ] && [ -n "$KEYSTORE_PASS" ]; then
             echo "$KEYSTORE_BASE64" | base64 --decode > android/app/keystore.jks
             {
               echo "storePassword=${KEYSTORE_PASS}"
               echo "keyAlias=${ALIAS_NAME:-outo}"
               echo "keyPassword=${ALIAS_PASS:-$KEYSTORE_PASS}"
             } > android/local.properties
-            echo "Release keystore restored from secrets."
+            echo "Unified release keystore restored from repository secrets."
           else
-            echo "Generating release keystore..."
-            keytool -genkeypair -v -keystore android/app/keystore.jks -alias outo -keyalg RSA -keysize 2048 -validity 10000 -storepass "OuTo@2026Key" -keypass "OuTo@2026Key" -dname "CN=OuTo, OU=App, O=OuTo, L=City, S=State, C=US"
-            {
-              echo "storePassword=OuTo@2026Key"
-              echo "keyAlias=outo"
-              echo "keyPassword=OuTo@2026Key"
-            } > android/local.properties
-            echo "Release keystore generated automatically."
+            echo "::error::Release signing credentials (KEYSTORE_BASE64 / KEYSTORE_PASS) missing in GitHub Secrets. Refusing to build without unified signing key."
+            exit 1
           fi
 
       - name: Setup Go
@@ -131,6 +125,11 @@ jobs:
         env:
           ANDROID_NDK_HOME: ${{ steps.build-ndk.outputs.ndk-path }}
         run: dart setup.dart android
+
+      - name: Cleanup Signing Secrets
+        if: always()
+        run: |
+          rm -f android/app/keystore.jks android/local.properties
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
