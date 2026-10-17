@@ -1,17 +1,16 @@
-﻿<div align="center">
+<div align="center">
 
 <img src="assets/images/icon.png" alt="OuTo" width="88">
 
 # OuTo
 
-A multi-platform proxy client based on ClashMeta. Simple to use, open source and ad-free.
+An Android proxy client based on ClashMeta. Simple to use, open source and ad-free.
 
 **English** · [简体中文](README_zh_CN.md)
 
 [![Release](https://img.shields.io/github/v/release/Own716/OuTo?style=flat-square&label=release)](https://github.com/Own716/OuTo/releases/latest)
 [![Downloads](https://img.shields.io/github/downloads/Own716/OuTo/total?style=flat-square&logo=github)](https://github.com/Own716/OuTo/releases)
 [![License](https://img.shields.io/github/license/Own716/OuTo?style=flat-square)](LICENSE)
-[![Telegram](https://img.shields.io/badge/Telegram-channel-26A5E4?style=flat-square&logo=telegram&logoColor=white)](https://github.com/Own716/OuTo)
 
 [Website](https://Own716.github.io/OuTo) · [Download](#download) · [Changelog](CHANGELOG.md) · [Build from source](#build-from-source)
 
@@ -20,62 +19,40 @@ A multi-platform proxy client based on ClashMeta. Simple to use, open source and
 <p align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="snapshots/preview-dark.png">
-    <img alt="OuTo dashboard on a MacBook and a phone" src="snapshots/preview.png" width="92%">
+    <img alt="OuTo dashboard" src="snapshots/preview.png" width="92%">
   </picture>
 </p>
 
 ## Features
 
-- **One app for Android, Windows, macOS and Linux**, with x64 and ARM64 builds on the desktop.
+- **Built Specifically for Android**: Tailored for modern Android phones, tablets, and Android TV devices.
 - **mihomo (Clash.Meta) core** with rule routing, proxy groups, latency tests, system proxy and TUN mode.
 - **Profiles** from a subscription link or a file, with a built-in editor, override scripts, and custom rules,
   proxies and proxy groups.
 - **Live views** of connections, requests, DNS queries and logs.
-- **Material You design with Apple-style interaction**: dynamic color, light and dark themes, continuous corners,
-  sheets that snap between heights, and layouts that adapt from phones to desktops.
-- **Backup and restore** through WebDAV or a local file.
-- **Platform touches**: a Quick Settings tile, per-app proxy and Android TV support on Android; a tray menu and
-  global hotkeys on the desktop.
+- **Material You design**: Dynamic color, light and dark themes, continuous corners, and sheets that snap between heights.
+- **Backup and restore** through WebDAV or local storage.
+- **Android platform integration**: Quick Settings tile, per-app proxy (whitelist/blacklist mode), and Android TV support.
 - **Open source and ad-free**, licensed under GPL-3.0.
 
 ## Download
 
-Get the latest build from [GitHub Releases](https://github.com/Own716/OuTo/releases/latest), or open the
-[website](https://Own716.github.io/OuTo#download), which picks the right file for your device.
+Get the latest build from [GitHub Releases](https://github.com/Own716/OuTo/releases/latest):
 
-| Platform | Packages | Notes |
+| Architecture | Package | Description |
 | --- | --- | --- |
-| Android | APK for `arm64-v8a`, `armeabi-v7a` and `x86_64` | Most phones use `arm64-v8a`. Also on the F-Droid repository below. |
-| Windows 10 and later | Installer (`.exe`) or portable `.zip`, for x64 and ARM64 | Pick ARM64 on Snapdragon and other ARM laptops. |
-| macOS 12 and later | DMG for Apple Silicon and Intel | Also on Homebrew. |
-| Linux | `.deb`, `.rpm` and AppImage, for x64 and ARM64 | See the tray note below. |
+| ARM64 | `OuTo-*-android-arm64-v8a.apk` | Recommended for most modern Android devices |
+| ARMv7 | `OuTo-*-android-armeabi-v7a.apk` | Older 32-bit Android phones and legacy TV boxes |
+| x86_64 | `OuTo-*-android-x86_64.apk` | Android emulators or x86-based Android devices |
 
 <p>
-  <a href="https://Own716.github.io/OuTo-fdroid-repo/repo?fingerprint=789D6D32668712EF7672F9E58DEEB15FBD6DCEEC5AE7A4371EA72F2AAE8A12FD"><img alt="Get it on F-Droid" src="snapshots/get-it-on-fdroid.svg" height="56"></a>
   <a href="https://github.com/Own716/OuTo/releases/latest"><img alt="Get it on GitHub" src="snapshots/get-it-on-github.svg" height="56"></a>
 </p>
-
-**Homebrew**
-
-```bash
-brew tap chen08209/tap
-brew install --cask outo
-```
-
-**Linux tray icon**
-
-The `.deb` package installs its own dependencies. With the AppImage or the `.rpm`, install the AyatanaAppIndicator
-library so the tray icon can show:
-
-```bash
-sudo apt-get install libayatana-appindicator3-1   # Debian and Ubuntu
-sudo dnf install libayatana-appindicator-gtk3     # Fedora
-```
 
 ## Usage
 
 **Import a profile from a link.** Opening a link in this form imports the subscription into OuTo. The `clashmeta://`
-and `outo://` schemes work the same way.
+and `outo://` schemes work the same way:
 
 ```text
 clash://install-config?url=<URL-encoded subscription link>
@@ -98,45 +75,21 @@ adb shell am start -a com.outo.app.action.TOGGLE
 
 ## Build from source
 
-You need [Flutter](https://docs.flutter.dev/get-started/install) 3.47 (release builds use 3.47.6),
-[Go](https://go.dev/dl/) 1.27 and [Rust](https://rustup.rs/) installed through rustup. Each platform builds on its own
-host, except Android, which builds anywhere.
+Building Android requires [Flutter](https://docs.flutter.dev/get-started/install) 3.47+,
+[Go](https://go.dev/dl/) 1.22+, JDK 17, and the Android SDK / NDK.
 
 ```bash
 git clone --recursive https://github.com/Own716/OuTo.git
 cd OuTo
 flutter pub get
-dart setup.dart android   # or windows, macos, linux
+dart setup.dart android
 ```
 
-Packages land in `dist/`. The Go core and the Rust libraries are compiled as part of the Flutter build.
-
-| Platform | Also needed |
-| --- | --- |
-| Android | Android SDK with the NDK. Add `--arch arm64` to build a single ABI. |
-| Windows | GCC (MinGW-w64) for the core and [Inno Setup](https://jrsoftware.org/isinfo.php) 6 for the installer. |
-| macOS | Xcode and Node.js. The script installs `appdmg` through npm. |
-| Linux | Debian or Ubuntu. The script installs the build packages with apt and downloads `appimagetool`. |
-
-Run `dart setup.dart --help` for the remaining options, such as `--targets` to build only some package formats.
-
-## Support
-
-Starring the repository is the easiest way to support the project. Questions and announcements go to the
-[Telegram channel](https://github.com/Own716/OuTo); bugs and feature requests go to
-[GitHub Issues](https://github.com/Own716/OuTo/issues).
-
-<a href="https://star-history.com/#Own716/OuTo&Date">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=Own716/OuTo&type=Date&theme=dark">
-    <img alt="Star history" src="https://api.star-history.com/svg?repos=Own716/OuTo&type=Date" width="640">
-  </picture>
-</a>
+Packages land in `dist/`. The Go core (via gomobile) is compiled as part of the Android build process.
 
 ## License
 
 OuTo is released under the [GPL-3.0 license](LICENSE).
-
 
 ---
 
@@ -145,4 +98,4 @@ OuTo is released under the [GPL-3.0 license](LICENSE).
 - **Upstream Origin**: This project is an independent fork and complete rebrand of the open-source project [FlClash](https://github.com/chen08209/FlClash) at release [v0.9.1](https://github.com/chen08209/FlClash/releases/tag/v0.9.1).
 - **Attribution**: Original code and architecture are copyright (c) 2023-2026 by chen08209 and the respective upstream contributors.
 - **License**: Released under the terms of the [GNU General Public License v3.0 (GPL-3.0)](LICENSE).
-- **Modifications**: Independent brand identity (OuTo), unique Android application package namespace (com.outo.app), newly generated release signature, and isolated system service/IPC identifiers.
+- **Modifications**: Rebranded to OuTo, purely focused on the Android platform, package namespace migrated to `com.outo.app`, configured with a fresh release keystore, and non-Android platform code pruned.

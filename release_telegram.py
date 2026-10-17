@@ -1,4 +1,4 @@
-﻿import html
+import html
 import json
 import os
 import sys
@@ -28,10 +28,7 @@ files = {}
 i = 1
 
 releaseKeywords = [
-    "windows-amd64-setup",
-    "android-arm64",
-    "macos-arm64",
-    "macos-amd64"
+    "android",
 ]
 
 for file in os.listdir(DIST_DIR):

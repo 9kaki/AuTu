@@ -7,9 +7,6 @@ import 'package:yaml/yaml.dart';
 
 const _allTargets = <String, String>{
   'android': 'apk',
-  'linux': 'deb,appimage,rpm',
-  'macos': 'dmg',
-  'windows': 'exe,zip',
 };
 
 const _androidFlutterTarget = {
@@ -42,11 +39,11 @@ Future<void> main(List<String> args) async {
     exit(1);
   }
 
-  final platform = rest.isNotEmpty ? rest.first : host;
+  final platform = rest.isNotEmpty ? rest.first : 'android';
 
-  if (platform != host && platform != 'android') {
+  if (platform != 'android') {
     stderr.writeln(
-      'Cannot build "$platform" on $hostOs. Allowed: $host, android',
+      'OuTo is configured for Android only. Specified platform "$platform" is not supported.',
     );
     _showHelp(parser);
     exit(1);
