@@ -1,4 +1,4 @@
-﻿package com.outo.app.plugins
+package com.outo.app.plugins
 
 import android.Manifest
 import android.app.Activity
@@ -554,9 +554,17 @@ class AppPlugin : FlutterPlugin, MethodChannel.MethodCallHandler, ActivityAware 
             val pm = context.packageManager
             val pkgName = context.packageName
 
-            val defaultComponent = android.content.ComponentName(pkgName, "$pkgName.MainActivity")
+            val mainComponent = android.content.ComponentName(pkgName, "$pkgName.MainActivity")
+            val defaultComponent = android.content.ComponentName(pkgName, "$pkgName.MainActivityDefault")
             val lightComponent = android.content.ComponentName(pkgName, "$pkgName.MainActivityLight")
             val darkComponent = android.content.ComponentName(pkgName, "$pkgName.MainActivityDark")
+
+            // Ensure base target activity is always enabled
+            pm.setComponentEnabledSetting(
+                mainComponent,
+                PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
+                PackageManager.DONT_KILL_APP,
+            )
 
             when (mode) {
                 "light" -> {

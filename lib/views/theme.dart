@@ -1,9 +1,10 @@
-﻿import 'dart:async';
+import 'dart:async';
 import 'dart:math';
 
 import 'package:outo/common/common.dart';
 import 'package:outo/enum/enum.dart';
 import 'package:outo/models/models.dart';
+import 'package:outo/plugins/app.dart';
 import 'package:outo/providers/config.dart';
 import 'package:outo/providers/state.dart';
 import 'package:outo/ui/icons/icons.dart';

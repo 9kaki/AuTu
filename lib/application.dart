@@ -1,4 +1,4 @@
-﻿import 'dart:async';
+import 'dart:async';
 import 'dart:io';
 
 import 'package:connectivity_plus/connectivity_plus.dart';
@@ -81,6 +81,8 @@ class ApplicationState extends ConsumerState<Application> {
       _initLink();
       if (!safeModeBuild) {
         unawaited(app?.initShortcuts());
+        final currentTheme = ref.read(themeSettingProvider).themeMode;
+        unawaited(app?.updateThemeMode(currentTheme.name) ?? Future.value());
       }
     });
   }
