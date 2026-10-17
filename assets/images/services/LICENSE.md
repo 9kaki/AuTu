@@ -4,9 +4,9 @@ Source: https://github.com/simple-icons/simple-icons/tree/13.0.0/icons
 License: CC0 1.0 Universal.
 License text: https://github.com/simple-icons/simple-icons/blob/13.0.0/LICENSE.md
 
-The Claude sun symbol is an original vector illustration for FlClash.
+The Claude sun symbol is an original vector illustration for OuTo.
 
-The Disney+ entry uses a neutral play-and-plus glyph drawn for FlClash, because
+The Disney+ entry uses a neutral play-and-plus glyph drawn for OuTo, because
 Simple Icons 13.0.0 carries no Disney+ icon; it is a generic streaming mark, not
 a reproduction of any Disney brand asset.
 
