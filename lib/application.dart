@@ -146,6 +146,12 @@ class ApplicationState extends ConsumerState<Application> {
           appSettingProvider.select((state) => state.locale),
         );
         final themeProps = ref.watch(themeSettingProvider);
+        ref.listen<ThemeMode>(
+          themeSettingProvider.select((state) => state.themeMode),
+          (previous, next) {
+            app?.updateThemeMode(next.name);
+          },
+        );
         return MaterialApp(
           debugShowCheckedModeBanner: false,
           navigatorKey: globalState.navigatorKey,

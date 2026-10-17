@@ -9,13 +9,13 @@ import 'package:outo/enum/enum.dart';
 import 'package:outo/models/models.dart';
 import 'package:material_ui/material_ui.dart';
 
-const appName = 'OuTo';
-const appHelperService = 'OuToHelperService';
+const appName = 'AuTu';
+const appHelperService = 'AuTuHelperService';
 const coreManifestName = 'manifest.json';
 const browserUa =
     'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
 const packageName = 'com.outo.app';
-final unixSocketPath = '/tmp/OuToSocket_${Random().nextInt(10000)}.sock';
+final unixSocketPath = '/tmp/AuTuSocket_${Random().nextInt(10000)}.sock';
 final windowsPipeName = '\\\\.\\pipe\\OuToCore_${_randomPipeId()}';
 const helperPort = 47890;
 const helperPortKey =

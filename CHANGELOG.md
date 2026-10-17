@@ -1,14 +1,19 @@
 # Changelog
 
-All notable changes to the OuTo project will be documented in this file.
+All notable changes to the AuTu project will be documented in this file.
 
-## [v0.9.1] - 2026-10-18
+## [v1.0.0] - 2026-10-18 (AuTu 1.0.0 预览版)
 
-### Features
-- **Android Focus**: Initial release of OuTo, deeply optimized exclusively for Android (phones, tablets, and Android TV).
-- **Mihomo Core**: Powered by Mihomo (Clash.Meta) core with full protocol support, high-performance TUN mode, latency testing, and rule-based traffic splitting.
-- **Material You UI**: Modern UI design with dynamic color theming, adaptive dark/light modes, smooth animations, and fluid gesture interactions.
-- **Android System Integration**: Support for Quick Settings tile, per-app proxy (whitelist and blacklist modes), and TV remote navigation.
-- **Profile Management**: One-click subscription import, built-in configuration editor, override scripts, and WebDAV cloud backup & sync.
-- **Network Insights**: Real-time traffic monitoring, connection inspection, DNS query logs, and core diagnostics.
-- **Clean & Ad-Free**: Fully open source, transparent, and completely free of third-party trackers or ads.
+### Branding & Visuals
+- **New Brand Identity**: Completely rebranded from OuTo to **AuTu**.
+- **Dynamic Dual Icons**:
+  - Introduced new brand icons featuring light mode (white background, black motif) and dark mode (black background, white motif).
+  - **Desktop Launcher**: Switches dynamically between light and dark launcher icons, or automatically follows system night mode.
+  - **Notification Center**: Notification badge and service icon seamlessly adjust between light and dark themes to match in-app and system modes.
+  - **Auto Follow System**: Fully respects Android system-wide dark/light settings.
+
+### Core & Stability
+- **Fixed Android Startup Crash**: Resolved class stripping caused by stale R8 ProGuard rules; all Kotlin components, plugins, and state models are fully preserved.
+- **Unified Release Signing**: Integrated unified, permanent release signing keys managed via GitHub Actions Secrets, guaranteeing zero signature mismatches across upgrades.
+- **Mihomo (Clash.Meta) Core**: High-performance TUN proxy, multi-protocol splitting, and low latency routing.
+- **Pure & Clean**: 100% open source, ad-free, and privacy-first.

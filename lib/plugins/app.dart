@@ -1,4 +1,4 @@
-﻿import 'dart:async';
+import 'dart:async';
 import 'dart:io';
 
 import 'package:outo/common/boot_record.dart';
@@ -160,6 +160,13 @@ class App {
       );
       return null;
     }
+  }
+
+  Future<void> updateThemeMode(String mode) async {
+    if (!Platform.isAndroid) return;
+    try {
+      await methodChannel.invokeMethod('updateThemeMode', {'mode': mode});
+    } catch (_) {}
   }
 }
 

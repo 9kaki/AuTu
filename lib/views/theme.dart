@@ -95,6 +95,7 @@ class _ThemeModeItem extends ConsumerWidget {
         ref
             .read(themeSettingProvider.notifier)
             .update((state) => state.copyWith(themeMode: value));
+        app?.updateThemeMode(value.name);
       },
     );
   }

@@ -203,6 +203,12 @@ class AppPlugin : FlutterPlugin, MethodChannel.MethodCallHandler, ActivityAware 
                 GlobalState.lastExitInfo()
             }
 
+            "updateThemeMode" -> {
+                val mode = call.argument<String>("mode") ?: "system"
+                updateAppIconAndTheme(mode)
+                result.success(true)
+            }
+
             else -> {
                 result.notImplemented()
             }
@@ -539,4 +545,75 @@ class AppPlugin : FlutterPlugin, MethodChannel.MethodCallHandler, ActivityAware 
         const val INSTALLED_APPS_PERMISSION_REQUEST_CODE = 1003
         const val LOCAL_NETWORK_PERMISSION_REQUEST_CODE = 1004
     }
+    private fun updateAppIconAndTheme(mode: String) {
+        val context = activity ?: GlobalState.application
+        try {
+            val prefs = context.getSharedPreferences("FlutterSharedPreferences", Context.MODE_PRIVATE)
+            prefs.edit().putString("flutter.themeMode", mode).apply()
+
+            val pm = context.packageManager
+            val pkgName = context.packageName
+
+            val defaultComponent = android.content.ComponentName(pkgName, "$pkgName.MainActivity")
+            val lightComponent = android.content.ComponentName(pkgName, "$pkgName.MainActivityLight")
+            val darkComponent = android.content.ComponentName(pkgName, "$pkgName.MainActivityDark")
+
+            when (mode) {
+                "light" -> {
+                    pm.setComponentEnabledSetting(
+                        lightComponent,
+                        PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
+                        PackageManager.DONT_KILL_APP,
+                    )
+                    pm.setComponentEnabledSetting(
+                        darkComponent,
+                        PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
+                        PackageManager.DONT_KILL_APP,
+                    )
+                    pm.setComponentEnabledSetting(
+                        defaultComponent,
+                        PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
+                        PackageManager.DONT_KILL_APP,
+                    )
+                }
+                "dark" -> {
+                    pm.setComponentEnabledSetting(
+                        darkComponent,
+                        PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
+                        PackageManager.DONT_KILL_APP,
+                    )
+                    pm.setComponentEnabledSetting(
+                        lightComponent,
+                        PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
+                        PackageManager.DONT_KILL_APP,
+                    )
+                    pm.setComponentEnabledSetting(
+                        defaultComponent,
+                        PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
+                        PackageManager.DONT_KILL_APP,
+                    )
+                }
+                else -> {
+                    pm.setComponentEnabledSetting(
+                        defaultComponent,
+                        PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
+                        PackageManager.DONT_KILL_APP,
+                    )
+                    pm.setComponentEnabledSetting(
+                        lightComponent,
+                        PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
+                        PackageManager.DONT_KILL_APP,
+                    )
+                    pm.setComponentEnabledSetting(
+                        darkComponent,
+                        PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
+                        PackageManager.DONT_KILL_APP,
+                    )
+                }
+            }
+        } catch (e: Exception) {
+            GlobalState.log("Failed to update app icon and theme: ${e.message}")
+        }
+    }
+
 }

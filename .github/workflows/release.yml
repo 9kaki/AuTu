@@ -167,7 +167,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.event.inputs.tag || github.ref_name }}
-          name: OuTo ${{ github.event.inputs.tag || github.ref_name }}
+          name: AuTu ${{ github.event.inputs.tag || github.ref_name }} 预览版
           files: |
             apks/*.apk
             apks/sha256sums.txt

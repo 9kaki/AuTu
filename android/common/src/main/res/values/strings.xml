@@ -1,5 +1,5 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">OuTo</string>
-    <string name="service_channel_name">OuTo Service</string>
+    <string name="app_name">AuTu</string>
+    <string name="service_channel_name">AuTu Service</string>
 </resources>

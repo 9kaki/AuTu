@@ -95,7 +95,7 @@ internal class NotificationModule(
             GlobalState.NOTIFICATION_CHANNEL,
         ).apply {
             setSmallIcon(R.drawable.ic_service)
-            setContentTitle("OuTo")
+            setContentTitle("AuTu")
             setContentIntent(intent.toPendingIntent)
             setPriority(NotificationCompat.PRIORITY_LOW)
             setCategory(NotificationCompat.CATEGORY_SERVICE)
@@ -110,9 +110,37 @@ internal class NotificationModule(
 
     private val stopIntent by lazy { QuickAction.STOP.quickIntent.toPendingIntent }
 
+    private fun isDarkModeActive(): Boolean {
+        return try {
+            val prefs = service.getSharedPreferences("FlutterSharedPreferences", android.content.Context.MODE_PRIVATE)
+            val themeMode = prefs.getString("flutter.themeMode", null)
+            when (themeMode) {
+                "light" -> false
+                "dark" -> true
+                else -> {
+                    val nightFlags = service.resources.configuration.uiMode and android.content.res.Configuration.UI_MODE_NIGHT_MASK
+                    nightFlags == android.content.res.Configuration.UI_MODE_NIGHT_YES
+                }
+            }
+        } catch (_: Exception) {
+            val nightFlags = service.resources.configuration.uiMode and android.content.res.Configuration.UI_MODE_NIGHT_MASK
+            nightFlags == android.content.res.Configuration.UI_MODE_NIGHT_YES
+        }
+    }
+
     private fun update(params: ExtendedNotificationParams) {
+        val isDark = isDarkModeActive()
+        val largeIcon = if (isDark) {
+            android.graphics.BitmapFactory.decodeResource(service.resources, R.drawable.ic_notification_dark)
+        } else {
+            android.graphics.BitmapFactory.decodeResource(service.resources, R.drawable.ic_notification_light)
+        }
+        val smallIcon = if (isDark) R.drawable.ic_service_dark else R.drawable.ic_service_light
+
         service.startForeground(
             with(notificationBuilder) {
+                setSmallIcon(smallIcon)
+                setLargeIcon(largeIcon)
                 setContentTitle(params.title)
                 setContentText(params.contentText)
                 clearActions()

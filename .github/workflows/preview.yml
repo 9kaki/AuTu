@@ -168,7 +168,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ env.PRE_VERSION }}
-          name: OuTo v${{ env.PRE_VERSION }}
+          name: AuTu v${{ env.PRE_VERSION }} 预览版
           files: |
             apks/*.apk
             apks/sha256sums.txt

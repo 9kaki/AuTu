@@ -9,7 +9,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 
 object GlobalState : CoroutineScope by CoroutineScope(SupervisorJob() + Dispatchers.Default) {
-    const val NOTIFICATION_CHANNEL = "OuTo"
+    const val NOTIFICATION_CHANNEL = "AuTu"
     const val NOTIFICATION_ID = 1
     private const val ANY_PID = 0
     private const val EVERY_EXIT_RECORD = 0
@@ -31,7 +31,7 @@ object GlobalState : CoroutineScope by CoroutineScope(SupervisorJob() + Dispatch
     }
 
     fun log(text: String) {
-        Log.d("OuTo", text)
+        Log.d("AuTu", text)
     }
 
     fun lastExitInfo(): Map<String, Any?>? {

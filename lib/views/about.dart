@@ -152,7 +152,9 @@ class _AboutHero extends StatelessWidget {
               child: Padding(
                 padding: const EdgeInsets.all(_logoInset),
                 child: Image.asset(
-                  'assets/images/icon.png',
+                  Theme.of(context).brightness == Brightness.dark
+                      ? 'assets/images/icon_dark.png'
+                      : 'assets/images/icon_light.png',
                   width: _logoSize - _logoInset * 2,
                   height: _logoSize - _logoInset * 2,
                 ),
