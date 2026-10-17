@@ -54,16 +54,30 @@ jobs:
           fetch-depth: 0
 
       - name: Setup Android Signing
-        if: env.KEYSTORE != ''
         env:
-          KEYSTORE: ${{ secrets.KEYSTORE }}
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 || secrets.KEYSTORE }}
+          KEYSTORE_PASS: ${{ secrets.KEYSTORE_PASS || secrets.STORE_PASSWORD || secrets.KEYSTORE_PASSWORD }}
+          ALIAS_NAME: ${{ secrets.ALIAS_NAME || secrets.KEY_ALIAS }}
+          ALIAS_PASS: ${{ secrets.ALIAS_PASS || secrets.KEY_PASSWORD }}
         run: |
-          echo "${{ secrets.KEYSTORE }}" | base64 --decode > android/app/keystore.jks
-          {
-            echo "keyAlias=${{ secrets.KEY_ALIAS }}"
-            echo "storePassword=${{ secrets.STORE_PASSWORD }}"
-            echo "keyPassword=${{ secrets.KEY_PASSWORD }}"
-          } >> android/local.properties
+          if [ -n "$KEYSTORE_BASE64" ]; then
+            echo "$KEYSTORE_BASE64" | base64 --decode > android/app/keystore.jks
+            {
+              echo "storePassword=${KEYSTORE_PASS}"
+              echo "keyAlias=${ALIAS_NAME:-outo}"
+              echo "keyPassword=${ALIAS_PASS:-$KEYSTORE_PASS}"
+            } > android/local.properties
+            echo "Release keystore restored from secrets."
+          else
+            echo "Generating release keystore..."
+            keytool -genkeypair -v -keystore android/app/keystore.jks -alias outo -keyalg RSA -keysize 2048 -validity 10000 -storepass "OuTo@2026Key" -keypass "OuTo@2026Key" -dname "CN=OuTo, OU=App, O=OuTo, L=City, S=State, C=US"
+            {
+              echo "storePassword=OuTo@2026Key"
+              echo "keyAlias=outo"
+              echo "keyPassword=OuTo@2026Key"
+            } > android/local.properties
+            echo "Release keystore generated automatically."
+          fi
 
       - name: Setup Go
         uses: actions/setup-go@v5
