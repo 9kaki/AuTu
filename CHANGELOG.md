@@ -2,6 +2,12 @@
 
 All notable changes to the AuTu project will be documented in this file.
 
+## [v1.0.2] - 2026-10-20 (AuTu 1.0.2 预览版)
+
+### Icon Scaling Refinement
+- **Balanced Logo Proportions**: Reduced center logo size to ~61% of visible circle diameter (~41% of adaptive canvas), providing generous, harmonious padding around the motif matching reference standard (FlClash) without being overly small.
+- **Updated Full Asset Suite**: Synchronized the refined logo proportion across all density mipmaps (`mipmap-mdpi` through `mipmap-xxxhdpi`), night mipmaps, Android TV banner, notification drawables, and multi-size ICO/PNG desktop assets.
+
 ## [v1.0.1] - 2026-10-20 (AuTu 1.0.1 预览版)
 
 ### Icon & Adaptive Launcher Fixes
