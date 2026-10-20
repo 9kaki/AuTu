@@ -566,58 +566,48 @@ class AppPlugin : FlutterPlugin, MethodChannel.MethodCallHandler, ActivityAware 
                 PackageManager.DONT_KILL_APP,
             )
 
-            when (mode) {
-                "light" -> {
-                    pm.setComponentEnabledSetting(
-                        lightComponent,
-                        PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
-                        PackageManager.DONT_KILL_APP,
+            val (targetComponent, disable1, disable2) = when (mode) {
+                "light" -> Triple(lightComponent, defaultComponent, darkComponent)
+                "dark" -> Triple(darkComponent, defaultComponent, lightComponent)
+                else -> Triple(defaultComponent, lightComponent, darkComponent)
+            }
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                pm.setComponentEnabledSettings(
+                    listOf(
+                        PackageManager.ComponentEnabledSetting(
+                            targetComponent,
+                            PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
+                            PackageManager.DONT_KILL_APP,
+                        ),
+                        PackageManager.ComponentEnabledSetting(
+                            disable1,
+                            PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
+                            PackageManager.DONT_KILL_APP,
+                        ),
+                        PackageManager.ComponentEnabledSetting(
+                            disable2,
+                            PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
+                            PackageManager.DONT_KILL_APP,
+                        ),
                     )
-                    pm.setComponentEnabledSetting(
-                        darkComponent,
-                        PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
-                        PackageManager.DONT_KILL_APP,
-                    )
-                    pm.setComponentEnabledSetting(
-                        defaultComponent,
-                        PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
-                        PackageManager.DONT_KILL_APP,
-                    )
-                }
-                "dark" -> {
-                    pm.setComponentEnabledSetting(
-                        darkComponent,
-                        PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
-                        PackageManager.DONT_KILL_APP,
-                    )
-                    pm.setComponentEnabledSetting(
-                        lightComponent,
-                        PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
-                        PackageManager.DONT_KILL_APP,
-                    )
-                    pm.setComponentEnabledSetting(
-                        defaultComponent,
-                        PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
-                        PackageManager.DONT_KILL_APP,
-                    )
-                }
-                else -> {
-                    pm.setComponentEnabledSetting(
-                        defaultComponent,
-                        PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
-                        PackageManager.DONT_KILL_APP,
-                    )
-                    pm.setComponentEnabledSetting(
-                        lightComponent,
-                        PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
-                        PackageManager.DONT_KILL_APP,
-                    )
-                    pm.setComponentEnabledSetting(
-                        darkComponent,
-                        PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
-                        PackageManager.DONT_KILL_APP,
-                    )
-                }
+                )
+            } else {
+                pm.setComponentEnabledSetting(
+                    targetComponent,
+                    PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
+                    PackageManager.DONT_KILL_APP,
+                )
+                pm.setComponentEnabledSetting(
+                    disable1,
+                    PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
+                    PackageManager.DONT_KILL_APP,
+                )
+                pm.setComponentEnabledSetting(
+                    disable2,
+                    PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
+                    PackageManager.DONT_KILL_APP,
+                )
             }
         } catch (e: Exception) {
             GlobalState.log("Failed to update app icon and theme: ${e.message}")

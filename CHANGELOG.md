@@ -2,6 +2,16 @@
 
 All notable changes to the AuTu project will be documented in this file.
 
+## [v1.0.1] - 2026-10-20 (AuTu 1.0.1 预览版)
+
+### Icon & Adaptive Launcher Fixes
+- **Fixed Launcher Icon Zoom/Crop Issue**: Re-engineered all Android adaptive icon foregrounds into density-specific mipmap buckets (`mipmap-mdpi` through `mipmap-xxxhdpi`), eliminating abnormal 400% zoom caused by unqualified drawable dimensions.
+- **Enhanced Safe Zone & Aspect Ratio**: Motif is now precisely centered within the 72dp adaptive safe zone with clean 18dp padding, ensuring pristine rendering across all Android launchers (circle, squircle, round rectangle).
+- **Seamless System Auto-Follow & Night Mode**:
+  - Added dedicated `mipmap-night-anydpi-v26/` resource tree so launcher icons automatically switch between light and dark modes according to the phone's system settings.
+  - Added full atomic component switching on Android 13+ via `setComponentEnabledSettings` to prevent launcher caching issues or icon flickering.
+- **Refined Notification & TV Assets**: Fully synchronized notification drawables and Android TV banner with the new motif geometry.
+
 ## [v1.0.0] - 2026-10-18 (AuTu 1.0.0 预览版)
 
 ### Branding & Visuals
