@@ -1,4 +1,4 @@
-﻿package com.outo.app.common
+package com.outo.app.common
 
 import android.app.ActivityManager
 import android.app.Application
@@ -9,7 +9,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 
 object GlobalState : CoroutineScope by CoroutineScope(SupervisorJob() + Dispatchers.Default) {
-    const val NOTIFICATION_CHANNEL = "AuTu"
+    const val NOTIFICATION_CHANNEL = "service-vpn-v2"
     const val NOTIFICATION_ID = 1
     private const val ANY_PID = 0
     private const val EVERY_EXIT_RECORD = 0
@@ -39,13 +39,17 @@ object GlobalState : CoroutineScope by CoroutineScope(SupervisorJob() + Dispatch
         val manager = application.getSystemService(ActivityManager::class.java) ?: return null
         val info = runCatching {
             manager.getHistoricalProcessExitReasons(
-                application.packageName,
+                packageName,
                 ANY_PID,
                 EVERY_EXIT_RECORD,
-            )
-        }.getOrNull()?.firstOrNull { it.processName == application.packageName } ?: return null
+            ).firstOrNull()
+        }.getOrNull() ?: return null
         return mapOf(
             "reason" to info.reason,
+            "status" to info.status,
+            "importance" to info.importance,
+            "pss" to info.pss,
+            "rss" to info.rss,
             "timestamp" to info.timestamp,
             "description" to info.description,
         )

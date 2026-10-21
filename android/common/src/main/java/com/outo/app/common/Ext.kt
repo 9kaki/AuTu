@@ -1,4 +1,4 @@
-﻿package com.outo.app.common
+package com.outo.app.common
 
 import android.annotation.SuppressLint
 import android.app.Notification
@@ -13,7 +13,7 @@ import android.content.Context.RECEIVER_EXPORTED
 import android.content.Context.RECEIVER_NOT_EXPORTED
 import android.content.Intent
 import android.content.IntentFilter
-import android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
+import android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_SYSTEM_EXEMPTED
 import android.os.Build
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
@@ -67,16 +67,21 @@ fun Context.ensureNotificationChannel() {
         return
     }
     val manager = getSystemService(NotificationManager::class.java) ?: return
-    if (manager.getNotificationChannel(GlobalState.NOTIFICATION_CHANNEL) != null) {
-        return
+    // Clean up old stale channels
+    runCatching { manager.deleteNotificationChannel("AuTu") }
+    runCatching { manager.deleteNotificationChannel("OuTo") }
+    runCatching { manager.deleteNotificationChannel("FlClash") }
+    runCatching { manager.deleteNotificationChannel("service-vpn") }
+
+    val channel = NotificationChannel(
+        GlobalState.NOTIFICATION_CHANNEL,
+        getString(R.string.service_channel_name),
+        NotificationManager.IMPORTANCE_LOW,
+    ).apply {
+        setShowBadge(true)
+        lockscreenVisibility = Notification.VISIBILITY_PUBLIC
     }
-    manager.createNotificationChannel(
-        NotificationChannel(
-            GlobalState.NOTIFICATION_CHANNEL,
-            getString(R.string.service_channel_name),
-            NotificationManager.IMPORTANCE_LOW,
-        ),
-    )
+    manager.createNotificationChannel(channel)
 }
 
 fun Service.startForeground(notification: Notification) {
@@ -84,7 +89,7 @@ fun Service.startForeground(notification: Notification) {
         startForeground(
             GlobalState.NOTIFICATION_ID,
             notification,
-            FOREGROUND_SERVICE_TYPE_SPECIAL_USE,
+            FOREGROUND_SERVICE_TYPE_SYSTEM_EXEMPTED,
         )
     } else {
         startForeground(GlobalState.NOTIFICATION_ID, notification)

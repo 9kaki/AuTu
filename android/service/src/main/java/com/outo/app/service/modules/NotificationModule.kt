@@ -1,13 +1,13 @@
 package com.outo.app.service.modules
 
 import android.app.Notification.FOREGROUND_SERVICE_IMMEDIATE
-import android.app.NotificationManager
 import android.app.Service
 import android.app.Service.STOP_FOREGROUND_REMOVE
 import android.content.Intent
 import android.os.Build
 import android.os.PowerManager
 import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.getSystemService
 import com.outo.app.common.Components
 import com.outo.app.common.GlobalState
@@ -58,8 +58,11 @@ internal class NotificationModule(
     private val service: Service,
     private val scope: CoroutineScope,
 ) : ServiceModule {
+    private var isForegroundStarted = false
+
     override fun start() {
         service.ensureNotificationChannel()
+        isForegroundStarted = false
         update(ServiceConfig.notificationParams.value.extended)
         scope.launch {
             // Some ROMs, vivo's among them, drop updates posted behind the
@@ -102,6 +105,7 @@ internal class NotificationModule(
             service,
             GlobalState.NOTIFICATION_CHANNEL,
         ).apply {
+            setWhen(0)
             setSmallIcon(R.drawable.ic_service)
             setContentTitle("AuTu")
             setContentIntent(intent.toPendingIntent)
@@ -111,30 +115,11 @@ internal class NotificationModule(
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                 foregroundServiceBehavior = FOREGROUND_SERVICE_IMMEDIATE
             }
-            setShowWhen(true)
             setOnlyAlertOnce(true)
         }
     }
 
     private val stopIntent by lazy { QuickAction.STOP.quickIntent.toPendingIntent }
-
-    private fun isDarkModeActive(): Boolean {
-        return try {
-            val prefs = service.getSharedPreferences("FlutterSharedPreferences", android.content.Context.MODE_PRIVATE)
-            val themeMode = prefs.getString("flutter.themeMode", null)
-            when (themeMode) {
-                "light" -> false
-                "dark" -> true
-                else -> {
-                    val nightFlags = service.resources.configuration.uiMode and android.content.res.Configuration.UI_MODE_NIGHT_MASK
-                    nightFlags == android.content.res.Configuration.UI_MODE_NIGHT_YES
-                }
-            }
-        } catch (_: Exception) {
-            val nightFlags = service.resources.configuration.uiMode and android.content.res.Configuration.UI_MODE_NIGHT_MASK
-            nightFlags == android.content.res.Configuration.UI_MODE_NIGHT_YES
-        }
-    }
 
     private fun applyLiveUpdateCapsule(
         builder: NotificationCompat.Builder,
@@ -160,44 +145,40 @@ internal class NotificationModule(
     }
 
     private fun update(params: ExtendedNotificationParams) {
-        val isDark = isDarkModeActive()
-        val largeIcon = if (isDark) {
-            android.graphics.BitmapFactory.decodeResource(service.resources, R.drawable.ic_notification_dark)
-        } else {
-            android.graphics.BitmapFactory.decodeResource(service.resources, R.drawable.ic_notification_light)
+        val notification = with(notificationBuilder) {
+            setSmallIcon(R.drawable.ic_service)
+            setContentTitle(params.title)
+            setContentText(params.contentText)
+            setStyle(NotificationCompat.BigTextStyle().bigText(params.bigContentText))
+            applyLiveUpdateCapsule(this, params.title)
+            clearActions()
+            if (params.showStopAction) {
+                val stopAction = NotificationCompat.Action.Builder(
+                    0,
+                    params.stopText,
+                    stopIntent,
+                ).setShowsUserInterface(false).build()
+                addAction(stopAction)
+            }
+            build()
         }
-        val smallIcon = if (isDark) R.drawable.ic_service_dark else R.drawable.ic_service_light
 
-        service.startForeground(
-            with(notificationBuilder) {
-                setSmallIcon(smallIcon)
-                setLargeIcon(largeIcon)
-                setContentTitle(params.title)
-                setContentText(params.contentText)
-                setStyle(NotificationCompat.BigTextStyle().bigText(params.bigContentText))
-                applyLiveUpdateCapsule(this, params.title)
-                clearActions()
-                if (params.showStopAction) {
-                    val stopAction = NotificationCompat.Action.Builder(
-                        0,
-                        params.stopText,
-                        stopIntent,
-                    ).setShowsUserInterface(false).build()
-                    addAction(stopAction)
-                }
-                build()
-            },
-        )
+        if (!isForegroundStarted) {
+            service.startForeground(notification)
+            isForegroundStarted = true
+        } else {
+            NotificationManagerCompat.from(service).notify(GlobalState.NOTIFICATION_ID, notification)
+        }
     }
 
     @Suppress("DEPRECATION")
     override fun stop() {
+        isForegroundStarted = false
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             service.stopForeground(STOP_FOREGROUND_REMOVE)
         } else {
             service.stopForeground(true)
         }
-        val notificationManager = service.getSystemService(NotificationManager::class.java)
-        notificationManager?.cancel(GlobalState.NOTIFICATION_ID)
+        NotificationManagerCompat.from(service).cancel(GlobalState.NOTIFICATION_ID)
     }
 }
