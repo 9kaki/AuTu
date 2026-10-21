@@ -191,8 +191,32 @@ SharedState sharedState(Ref ref) {
   final selectedMap = currentProfile.selectedMap;
   final onlyStatisticsProxy = appSetting.onlyStatisticsProxy;
   final testUrl = appSetting.testUrl;
+
+  String? activeProxy;
+  if (selectedMap.isNotEmpty) {
+    activeProxy = selectedMap['GLOBAL'] ??
+        selectedMap['Proxy'] ??
+        selectedMap['PROXIES'] ??
+        selectedMap['节点选择'] ??
+        selectedMap['默认'] ??
+        selectedMap.values.firstWhere(
+          (v) => v.isNotEmpty && v != 'DIRECT' && v != 'REJECT',
+          orElse: () => selectedMap.values.firstWhere(
+            (v) => v.isNotEmpty,
+            orElse: () => '',
+          ),
+        );
+  }
+  final displayTitle = (currentProfileName.isNotEmpty &&
+          activeProxy != null &&
+          activeProxy.isNotEmpty)
+      ? '$currentProfileName · $activeProxy'
+      : (activeProxy != null && activeProxy.isNotEmpty)
+          ? activeProxy
+          : (currentProfileName.isNotEmpty ? currentProfileName : 'AuTu');
+
   return SharedState(
-    currentProfileName: currentProfileName,
+    currentProfileName: displayTitle,
     onlyStatisticsProxy: onlyStatisticsProxy,
     showStopAction: appSetting.showStopAction,
     stopText: currentAppLocalizations.stop,

@@ -1,6 +1,7 @@
-﻿package com.outo.app.service.modules
+package com.outo.app.service.modules
 
 import android.app.Notification.FOREGROUND_SERVICE_IMMEDIATE
+import android.app.NotificationManager
 import android.app.Service
 import android.app.Service.STOP_FOREGROUND_REMOVE
 import android.content.Intent
@@ -20,7 +21,9 @@ import com.outo.app.core.Core
 import com.outo.app.service.R
 import com.outo.app.service.ServiceConfig
 import com.outo.app.service.models.NotificationParams
-import com.outo.app.service.models.getSpeedTrafficText
+import com.outo.app.service.models.NotificationTrafficInfo
+import com.outo.app.service.models.getNotificationTrafficInfo
+import com.outo.app.service.utils.RegionExtractor
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
@@ -36,15 +39,20 @@ private data class ExtendedNotificationParams(
     val stopText: String,
     val showStopAction: Boolean,
     val contentText: String,
+    val bigContentText: String,
 )
 
 private val NotificationParams.extended: ExtendedNotificationParams
-    get() = ExtendedNotificationParams(
-        title,
-        stopText,
-        showStopAction,
-        Core.getSpeedTrafficText(onlyStatisticsProxy),
-    )
+    get() {
+        val trafficInfo = Core.getNotificationTrafficInfo(onlyStatisticsProxy)
+        return ExtendedNotificationParams(
+            title = title,
+            stopText = stopText,
+            showStopAction = showStopAction,
+            contentText = trafficInfo.collapsedText,
+            bigContentText = trafficInfo.bigText,
+        )
+    }
 
 internal class NotificationModule(
     private val service: Service,
@@ -128,6 +136,29 @@ internal class NotificationModule(
         }
     }
 
+    private fun applyLiveUpdateCapsule(
+        builder: NotificationCompat.Builder,
+        title: String,
+    ) {
+        // 取消绿色/黄色强调色，移除展开卡片彩色大圆盘，与收起态统一为通透原生 Logo
+        builder.color = NotificationCompat.COLOR_DEFAULT
+
+        val displayChipText = RegionExtractor.extractRegion(title).ifBlank { "已连接" }
+
+        // 谷歌原生 Android 16 实况岛 / Rich Ongoing Notifications (Live Updates) 规范
+        // 收起状态：挖孔屏旁展示原生纯净 Logo 与地区汉字（如“日本”）
+        builder.extras.apply {
+            putBoolean("android.requestPromotedOngoing", true)
+            putCharSequence("android.shortCriticalText", displayChipText)
+            putString("capsule_text", displayChipText)
+            remove("capsule_color")
+            putString("live_activity_status", "active")
+        }
+
+        // 彻底清空 subText，避免系统在标题右侧强行并排追加网速文本
+        builder.setSubText(null)
+    }
+
     private fun update(params: ExtendedNotificationParams) {
         val isDark = isDarkModeActive()
         val largeIcon = if (isDark) {
@@ -143,9 +174,16 @@ internal class NotificationModule(
                 setLargeIcon(largeIcon)
                 setContentTitle(params.title)
                 setContentText(params.contentText)
+                setStyle(NotificationCompat.BigTextStyle().bigText(params.bigContentText))
+                applyLiveUpdateCapsule(this, params.title)
                 clearActions()
                 if (params.showStopAction) {
-                    addAction(0, params.stopText, stopIntent)
+                    val stopAction = NotificationCompat.Action.Builder(
+                        0,
+                        params.stopText,
+                        stopIntent,
+                    ).setShowsUserInterface(false).build()
+                    addAction(stopAction)
                 }
                 build()
             },
@@ -159,5 +197,7 @@ internal class NotificationModule(
         } else {
             service.stopForeground(true)
         }
+        val notificationManager = service.getSystemService(NotificationManager::class.java)
+        notificationManager?.cancel(GlobalState.NOTIFICATION_ID)
     }
 }

@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/Own716/AuTu/releases/latest"><img src="https://img.shields.io/badge/Release-v1.0.2--preview-blue.svg?style=flat-square" alt="Version"></a>
+  <a href="https://github.com/Own716/AuTu/releases/latest"><img src="https://img.shields.io/badge/Release-v1.0.3--preview-blue.svg?style=flat-square" alt="Version"></a>
   <a href="https://android-arsenal.com/api?level=21"><img src="https://img.shields.io/badge/Android-5.0%2B%20(API%2021%2B)-brightgreen.svg?style=flat-square" alt="API"></a>
   <a href="https://www.gnu.org/licenses/gpl-3.0"><img src="https://img.shields.io/badge/License-GPL--3.0-orange.svg?style=flat-square" alt="License"></a>
   <a href="https://t.me/OwnBoxs"><img src="https://img.shields.io/badge/Telegram-@OwnBoxs-2CA5E0.svg?logo=telegram&style=flat-square" alt="Telegram"></a>
@@ -35,6 +35,8 @@
 
 ## ✨ Features / 功能亮点
 
+- 🏝 **超级岛（实况更新胶囊）**：深度支持 Android 16 原生实况通知（Rich Ongoing Notifications）与各大主流 ROM 胶囊（OriginOS 原子岛、HyperOS 焦点通知、Flyme 灵动胶囊、ColorOS 流体云），挖孔屏旁极简常驻显示节点地区与连接状态。
+- 🔔 **重构通知中心体验**：清晰呈现节点名称与上下行实时网速，展开态支持实时速率与累计流量双行展示，断开连接时瞬间销毁无幽灵残影。
 - ⚡ **高性能内核**：基于 Mihomo (Clash.Meta) 内核，支持 TUN 模式、低延迟分流及规则组代理。
 - 🎨 **自适应新图标与主题**：全新深浅双色品牌图标，支持应用内深浅色自由切换、系统模式无缝自动跟随，桌面与通知中心同步联动。
 - 🎨 **Material You 现代设计**：全面支持动态配色、深色/浅色自适应主题、连续曲率圆角与丝滑手势交互。

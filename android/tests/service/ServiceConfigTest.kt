@@ -1,4 +1,4 @@
-﻿package com.outo.app.service
+package com.outo.app.service
 
 import com.outo.app.common.AccessControlMode
 import com.outo.app.service.models.AccessControlProps
@@ -33,7 +33,7 @@ class ServiceConfigTest {
     fun `notification params default to the app name and stop label`() {
         val defaults = NotificationParams()
 
-        assertEquals("OuTo", defaults.title)
+        assertEquals("AuTu", defaults.title)
         assertEquals("STOP", defaults.stopText)
         assertEquals(false, defaults.onlyStatisticsProxy)
         assertEquals(true, defaults.showStopAction)

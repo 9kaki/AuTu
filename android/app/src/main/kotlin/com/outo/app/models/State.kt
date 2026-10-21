@@ -1,4 +1,4 @@
-﻿package com.outo.app.models
+package com.outo.app.models
 
 import com.outo.app.service.models.VpnOptions
 import com.google.gson.annotations.SerializedName
@@ -8,7 +8,7 @@ data class SharedState(
     val stopTip: String = "Stopping VPN...",
     val localNetworkTip: String =
         "Local network permission denied: using the gvisor stack, LAN is unreachable.",
-    val currentProfileName: String = "OuTo",
+    val currentProfileName: String = "AuTu",
     val stopText: String = "Stop",
     val onlyStatisticsProxy: Boolean = false,
     val showStopAction: Boolean = true,
