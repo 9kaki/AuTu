@@ -1339,10 +1339,23 @@ class MessageLookup extends MessageLookupByLibrary {
     "ruleListInvalid": MessageLookupByLibrary.simpleMessage(
       "ルールは 1 項目に 1 つのルールを書いた YAML リストにしてください。例：- DOMAIN,example.com,DIRECT",
     ),
+    "ruleOptions": MessageLookupByLibrary.simpleMessage("カスタムルールスイッチ"),
+    "ruleOptionsEmpty": MessageLookupByLibrary.simpleMessage(
+      "このスクリプトには切り替えられるスイッチがありません",
     ),
+    "ruleOptionsEmptyDesc": MessageLookupByLibrary.simpleMessage(
+      "スイッチは ruleOptionsEnable で宣言する必要があり、そこにあるものだけを切り替えられます。",
     ),
+    "ruleOptionsFailed": MessageLookupByLibrary.simpleMessage(
+      "スクリプトのスイッチを読み取れませんでした",
     ),
+    "ruleOptionsGroups": MessageLookupByLibrary.simpleMessage("ポリシーグループ"),
+    "ruleOptionsLockedGroup": MessageLookupByLibrary.simpleMessage(
+      "最終規則がここを指しているため、オフにできません",
     ),
+    "ruleOptionsOthers": MessageLookupByLibrary.simpleMessage("その他のオプション"),
+    "ruleOptionsRejected": MessageLookupByLibrary.simpleMessage(
+      "スクリプトがこれらのスイッチを拒否したため、元に戻しました",
     ),
     "rulePresetBittorrentDirect": MessageLookupByLibrary.simpleMessage(
       "BitTorrent を直接接続",

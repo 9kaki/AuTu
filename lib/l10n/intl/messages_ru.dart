@@ -1632,11 +1632,25 @@ class MessageLookup extends MessageLookupByLibrary {
     "ruleListInvalid": MessageLookupByLibrary.simpleMessage(
       "Правила должны быть YAML-списком, по одному правилу в элементе, например - DOMAIN,example.com,DIRECT",
     ),
+    "ruleOptions": MessageLookupByLibrary.simpleMessage("Переключатели правил"),
+    "ruleOptionsEmpty": MessageLookupByLibrary.simpleMessage(
+      "Этот скрипт не объявляет переключателей",
     ),
+    "ruleOptionsEmptyDesc": MessageLookupByLibrary.simpleMessage(
+      "Скрипт объявляет переключатели в ruleOptionsEnable; менять здесь можно только их.",
     ),
+    "ruleOptionsFailed": MessageLookupByLibrary.simpleMessage(
+      "Не удалось прочитать переключатели скрипта",
     ),
+    "ruleOptionsGroups": MessageLookupByLibrary.simpleMessage("Группы политик"),
+    "ruleOptionsLockedGroup": MessageLookupByLibrary.simpleMessage(
+      "Последнее правило указывает сюда, поэтому группу нельзя отключить",
     ),
+    "ruleOptionsOthers": MessageLookupByLibrary.simpleMessage(
+      "Другие параметры",
     ),
+    "ruleOptionsRejected": MessageLookupByLibrary.simpleMessage(
+      "Скрипт отклонил эти переключатели, они восстановлены",
     ),
     "rulePresetBittorrentDirect": MessageLookupByLibrary.simpleMessage(
       "BitTorrent напрямую",

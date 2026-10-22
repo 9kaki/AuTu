@@ -1312,10 +1312,23 @@ class MessageLookup extends MessageLookupByLibrary {
     "ruleListInvalid": MessageLookupByLibrary.simpleMessage(
       "규칙은 항목마다 규칙 하나인 YAML 목록이어야 합니다. 예: - DOMAIN,example.com,DIRECT",
     ),
+    "ruleOptions": MessageLookupByLibrary.simpleMessage("사용자 지정 규칙 스위치"),
+    "ruleOptionsEmpty": MessageLookupByLibrary.simpleMessage(
+      "이 스크립트에는 전환할 스위치가 없습니다",
     ),
+    "ruleOptionsEmptyDesc": MessageLookupByLibrary.simpleMessage(
+      "스위치는 ruleOptionsEnable에 선언해야 하며, 그 안의 항목만 여기에서 전환할 수 있습니다.",
     ),
+    "ruleOptionsFailed": MessageLookupByLibrary.simpleMessage(
+      "스크립트 스위치를 읽을 수 없습니다",
     ),
+    "ruleOptionsGroups": MessageLookupByLibrary.simpleMessage("정책 그룹"),
+    "ruleOptionsLockedGroup": MessageLookupByLibrary.simpleMessage(
+      "마지막 규칙이 이 그룹을 가리키므로 끌 수 없습니다",
     ),
+    "ruleOptionsOthers": MessageLookupByLibrary.simpleMessage("기타 옵션"),
+    "ruleOptionsRejected": MessageLookupByLibrary.simpleMessage(
+      "스크립트가 이 스위치를 거부하여 되돌렸습니다",
     ),
     "rulePresetBittorrentDirect": MessageLookupByLibrary.simpleMessage(
       "BitTorrent 직접 연결",

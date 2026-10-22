@@ -1564,10 +1564,23 @@ class MessageLookup extends MessageLookupByLibrary {
     "ruleListInvalid": MessageLookupByLibrary.simpleMessage(
       "The rules must be a YAML list with one rule per item, such as - DOMAIN,example.com,DIRECT",
     ),
+    "ruleOptions": MessageLookupByLibrary.simpleMessage("Custom rule switches"),
+    "ruleOptionsEmpty": MessageLookupByLibrary.simpleMessage(
+      "This script declares no switches",
     ),
+    "ruleOptionsEmptyDesc": MessageLookupByLibrary.simpleMessage(
+      "A script lists its switches in ruleOptionsEnable; only those can be toggled here.",
     ),
+    "ruleOptionsFailed": MessageLookupByLibrary.simpleMessage(
+      "Could not read the script\'s switches",
     ),
+    "ruleOptionsGroups": MessageLookupByLibrary.simpleMessage("Policy groups"),
+    "ruleOptionsLockedGroup": MessageLookupByLibrary.simpleMessage(
+      "The fallback rule points here, so it stays on",
     ),
+    "ruleOptionsOthers": MessageLookupByLibrary.simpleMessage("Other options"),
+    "ruleOptionsRejected": MessageLookupByLibrary.simpleMessage(
+      "The script rejected these switches, so they were put back",
     ),
     "rulePresetBittorrentDirect": MessageLookupByLibrary.simpleMessage(
       "BitTorrent direct",

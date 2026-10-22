@@ -942,5 +942,13 @@
   "autoInclude": "Incluir automáticamente",
   "allReferencedProxies": "Todos los proxies referenciados",
   "allReferencedProxyProviders": "Todos los proveedores de proxies referenciados",
+  "ruleOptions": "Interruptores de reglas",
+  "ruleOptionsGroups": "Grupos de políticas",
+  "ruleOptionsOthers": "Otras opciones",
+  "ruleOptionsEmpty": "Este script no declara interruptores",
+  "ruleOptionsEmptyDesc": "Un script declara sus interruptores en ruleOptionsEnable; solo esos se pueden cambiar aquí.",
+  "ruleOptionsFailed": "No se pudieron leer los interruptores del script",
+  "ruleOptionsLockedGroup": "La regla final apunta aquí, así que sigue activo",
+  "ruleOptionsRejected": "El script rechazó estos interruptores y se han restaurado"
 
 }

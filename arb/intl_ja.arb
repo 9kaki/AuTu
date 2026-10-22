@@ -942,5 +942,13 @@
   "autoInclude": "自動で含める",
   "allReferencedProxies": "参照されているすべてのプロキシ",
   "allReferencedProxyProviders": "参照されているすべてのプロキシプロバイダー",
+  "ruleOptions": "カスタムルールスイッチ",
+  "ruleOptionsGroups": "ポリシーグループ",
+  "ruleOptionsOthers": "その他のオプション",
+  "ruleOptionsEmpty": "このスクリプトには切り替えられるスイッチがありません",
+  "ruleOptionsEmptyDesc": "スイッチは ruleOptionsEnable で宣言する必要があり、そこにあるものだけを切り替えられます。",
+  "ruleOptionsFailed": "スクリプトのスイッチを読み取れませんでした",
+  "ruleOptionsLockedGroup": "最終規則がここを指しているため、オフにできません",
+  "ruleOptionsRejected": "スクリプトがこれらのスイッチを拒否したため、元に戻しました"
 
 }

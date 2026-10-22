@@ -942,5 +942,13 @@
   "autoInclude": "自动包含",
   "allReferencedProxies": "全部被引用的代理",
   "allReferencedProxyProviders": "全部被引用的代理集",
+  "ruleOptions": "自定义规则开关",
+  "ruleOptionsGroups": "策略组",
+  "ruleOptionsOthers": "其他设置",
+  "ruleOptionsEmpty": "这个脚本没有可切换的开关",
+  "ruleOptionsEmptyDesc": "脚本需要声明 ruleOptionsEnable，其中的选项才能在这里显示。",
+  "ruleOptionsFailed": "无法读取脚本开关",
+  "ruleOptionsLockedGroup": "兜底规则指向它，不能关闭",
+  "ruleOptionsRejected": "脚本拒绝了这些开关，已还原"
 
 }

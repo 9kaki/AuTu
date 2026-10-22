@@ -942,5 +942,13 @@
   "autoInclude": "Автоматическое включение",
   "allReferencedProxies": "Все используемые прокси",
   "allReferencedProxyProviders": "Все используемые провайдеры прокси",
+  "ruleOptions": "Переключатели правил",
+  "ruleOptionsGroups": "Группы политик",
+  "ruleOptionsOthers": "Другие параметры",
+  "ruleOptionsEmpty": "Этот скрипт не объявляет переключателей",
+  "ruleOptionsEmptyDesc": "Скрипт объявляет переключатели в ruleOptionsEnable; менять здесь можно только их.",
+  "ruleOptionsFailed": "Не удалось прочитать переключатели скрипта",
+  "ruleOptionsLockedGroup": "Последнее правило указывает сюда, поэтому группу нельзя отключить",
+  "ruleOptionsRejected": "Скрипт отклонил эти переключатели, они восстановлены"
 
 }

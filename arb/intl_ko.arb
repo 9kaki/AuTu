@@ -942,5 +942,13 @@
   "autoInclude": "자동 포함",
   "allReferencedProxies": "참조된 모든 프록시",
   "allReferencedProxyProviders": "참조된 모든 프록시 공급자",
+  "ruleOptions": "사용자 지정 규칙 스위치",
+  "ruleOptionsGroups": "정책 그룹",
+  "ruleOptionsOthers": "기타 옵션",
+  "ruleOptionsEmpty": "이 스크립트에는 전환할 스위치가 없습니다",
+  "ruleOptionsEmptyDesc": "스위치는 ruleOptionsEnable에 선언해야 하며, 그 안의 항목만 여기에서 전환할 수 있습니다.",
+  "ruleOptionsFailed": "스크립트 스위치를 읽을 수 없습니다",
+  "ruleOptionsLockedGroup": "마지막 규칙이 이 그룹을 가리키므로 끌 수 없습니다",
+  "ruleOptionsRejected": "스크립트가 이 스위치를 거부하여 되돌렸습니다"
 
 }

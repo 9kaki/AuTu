@@ -1673,12 +1673,27 @@ class MessageLookup extends MessageLookupByLibrary {
     "ruleListInvalid": MessageLookupByLibrary.simpleMessage(
       "Las reglas deben ser una lista YAML con una regla por elemento, por ejemplo - DOMAIN,example.com,DIRECT",
     ),
+    "ruleOptions": MessageLookupByLibrary.simpleMessage(
+      "Interruptores de reglas",
     ),
+    "ruleOptionsEmpty": MessageLookupByLibrary.simpleMessage(
+      "Este script no declara interruptores",
     ),
+    "ruleOptionsEmptyDesc": MessageLookupByLibrary.simpleMessage(
+      "Un script declara sus interruptores en ruleOptionsEnable; solo esos se pueden cambiar aquí.",
     ),
+    "ruleOptionsFailed": MessageLookupByLibrary.simpleMessage(
+      "No se pudieron leer los interruptores del script",
     ),
+    "ruleOptionsGroups": MessageLookupByLibrary.simpleMessage(
+      "Grupos de políticas",
     ),
+    "ruleOptionsLockedGroup": MessageLookupByLibrary.simpleMessage(
+      "La regla final apunta aquí, así que sigue activo",
     ),
+    "ruleOptionsOthers": MessageLookupByLibrary.simpleMessage("Otras opciones"),
+    "ruleOptionsRejected": MessageLookupByLibrary.simpleMessage(
+      "El script rechazó estos interruptores y se han restaurado",
     ),
     "rulePresetBittorrentDirect": MessageLookupByLibrary.simpleMessage(
       "BitTorrent directo",

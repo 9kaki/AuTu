@@ -1216,8 +1216,19 @@ class MessageLookup extends MessageLookupByLibrary {
     "ruleListInvalid": MessageLookupByLibrary.simpleMessage(
       "规则必须是 YAML 列表，每项一条规则，例如 - DOMAIN,example.com,DIRECT",
     ),
+    "ruleOptions": MessageLookupByLibrary.simpleMessage("自定义规则开关"),
+    "ruleOptionsEmpty": MessageLookupByLibrary.simpleMessage("这个脚本没有可切换的开关"),
+    "ruleOptionsEmptyDesc": MessageLookupByLibrary.simpleMessage(
+      "脚本需要声明 ruleOptionsEnable，其中的选项才能在这里显示。",
     ),
+    "ruleOptionsFailed": MessageLookupByLibrary.simpleMessage("无法读取脚本开关"),
+    "ruleOptionsGroups": MessageLookupByLibrary.simpleMessage("策略组"),
+    "ruleOptionsLockedGroup": MessageLookupByLibrary.simpleMessage(
+      "兜底规则指向它，不能关闭",
     ),
+    "ruleOptionsOthers": MessageLookupByLibrary.simpleMessage("其他设置"),
+    "ruleOptionsRejected": MessageLookupByLibrary.simpleMessage(
+      "脚本拒绝了这些开关，已还原",
     ),
     "rulePresetBittorrentDirect": MessageLookupByLibrary.simpleMessage(
       "BT 下载直连",
