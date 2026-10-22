@@ -51,6 +51,7 @@ enum CoreMethod {
   clearEffect,
   updateDns,
   watchRoute,
+  speedTest,
 }
 
 class CoreMethodCall {

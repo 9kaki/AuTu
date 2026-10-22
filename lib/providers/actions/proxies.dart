@@ -50,6 +50,82 @@ class ProxiesAction extends _$ProxiesAction {
     });
   }
 
+  Future<void> speedTestSingle(
+    Proxy proxy, {
+    SpeedTestMode mode = SpeedTestMode.both,
+  }) async {
+    final groups = ref.read(groupsProvider);
+    final selectedMap = ref.read(
+      currentProfileProvider.select((state) => state?.selectedMap ?? {}),
+    );
+    final realState = computeRealSelectedProxyState(
+      proxy.name,
+      groups: groups,
+      selectedMap: selectedMap,
+    );
+    final targetName =
+        realState.proxyName.isNotEmpty ? realState.proxyName : proxy.name;
+
+    final testing = ref.read(speedTestingProxiesProvider.notifier);
+    if (!testing.start(targetName)) return;
+
+    try {
+      final result = await _core.speedTest(
+        SpeedTestParams(
+          proxyName: targetName,
+          mode: mode,
+        ),
+      );
+      if (result != null) {
+        ref.read(speedTestDataSourceProvider.notifier).setResult(result);
+        if (result.delay != null && result.delay! > 0) {
+          setDelay(Delay(name: targetName, url: '', value: result.delay));
+        }
+      }
+    } catch (error) {
+      commonPrint.log('Speed test failed for ' + targetName + ': ' + error.toString());
+    } finally {
+      testing.stop(targetName);
+    }
+  }
+
+  Future<void> speedTestPageGroup(
+    String groupName, {
+    SpeedTestMode mode = SpeedTestMode.both,
+    bool matchSearch = true,
+  }) async {
+    final group = ref.read(groupsProvider).getGroup(groupName);
+    if (group == null) {
+      return;
+    }
+    final testing = ref.read(speedTestingGroupsProvider.notifier);
+    if (!testing.start(groupName)) {
+      return;
+    }
+    try {
+      final query = SearchQuery(
+        matchSearch ? ref.read(queryProvider(QueryTag.proxies)) : '',
+      );
+      final proxies = group.all
+          .whereMatches(query, (proxy) => proxy.searchFields)
+          .toList();
+
+      for (final proxy in proxies) {
+        if (!ref.read(speedTestingGroupsProvider).contains(groupName)) {
+          break;
+        }
+        await speedTestSingle(proxy, mode: mode);
+      }
+    } finally {
+      testing.stop(groupName);
+    }
+  }
+
+  void cancelSpeedTests() {
+    ref.read(speedTestingGroupsProvider.notifier).clear();
+    ref.read(speedTestingProxiesProvider.notifier).clear();
+  }
+
   void cancelDelayTests() {
     for (final job in _delayTestJobs) {
       job.cancelled = true;

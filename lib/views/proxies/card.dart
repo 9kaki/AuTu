@@ -6,6 +6,9 @@ import 'package:outo/state.dart';
 import 'package:outo/ui/icons/icons.dart';
 import 'package:outo/widgets/widgets.dart';
 import 'package:material_ui/material_ui.dart';
+import 'package:flutter/services.dart' show Clipboard, ClipboardData, HapticFeedback;
+import 'package:outo/core/core.dart';
+import 'package:outo/ui/ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 void selectGroupProxy(
@@ -140,6 +143,15 @@ class ProxyCard extends ConsumerWidget {
               groupName: groupName,
               groupType: groupType,
               proxyName: proxy.name,
+            );
+          },
+          onLongPress: () {
+            _showProxyContextMenu(
+              context,
+              ref,
+              proxy,
+              groupName,
+              testUrl,
             );
           },
           isSelected: inUse,
@@ -284,6 +296,12 @@ class _DelayTextState extends ConsumerState<_DelayText> {
         testUrl: widget.testUrl,
       ),
     );
+    final isSpeedTesting = ref.watch(
+      isSpeedTestingProxyProvider(widget.proxy.name),
+    );
+    final speedResult = ref.watch(
+      speedTestResultForProxyProvider(widget.proxy.name),
+    );
     return Actions(
       actions: {
         ActivateIntent: CallbackAction<ActivateIntent>(
@@ -325,27 +343,248 @@ class _DelayTextState extends ConsumerState<_DelayText> {
                       ),
                     }),
                   )
-                : GestureDetector(
-                    onTap: _handleTestCurrentDelay,
-                    child: _withFocusRing(
-                      context,
-                      Text(
-                        delay > 0
-                            ? '$delay ms'
-                            : delayFailureText(delay, context.appLocalizations),
-                        maxLines: 1,
-                        style: AppTextStyle.caption2
-                            .of(context, emphasized: true)
-                            .copyWith(
-                              overflow: TextOverflow.ellipsis,
-                              color: context.colorScheme.delayColor(delay),
+                : isSpeedTesting
+                    ? SizedBox(
+                        height: measure.textHeight(AppTextStyle.caption2),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            CommonCircleLoading(
+                              size: measure.textHeight(AppTextStyle.caption2),
                             ),
+                          ],
+                        ),
+                      )
+                    : GestureDetector(
+                        onTap: _handleTestCurrentDelay,
+                        child: _withFocusRing(
+                          context,
+                          Text(
+                            () {
+                              final delayStr = delay > 0
+                                  ? '$delay ms'
+                                  : delayFailureText(delay, context.appLocalizations);
+                              if (speedResult != null) {
+                                final down = speedResult.formattedDownloadSpeed;
+                                final up = speedResult.formattedUploadSpeed;
+                                if (down != null && up != null) {
+                                  return '$delayStr · ↓$down ↑$up';
+                                } else if (down != null) {
+                                  return '$delayStr · ↓$down';
+                                } else if (up != null) {
+                                  return '$delayStr · ↑$up';
+                                }
+                              }
+                              return delayStr;
+                            }(),
+                            maxLines: 1,
+                            style: AppTextStyle.caption2
+                                .of(context, emphasized: true)
+                                .copyWith(
+                                  overflow: TextOverflow.ellipsis,
+                                  color: context.colorScheme.delayColor(delay),
+                                ),
+                          ),
+                        ),
                       ),
-                    ),
-                  ),
           ),
         ),
       ),
     );
   }
+}
+
+
+void _showProxyContextMenu(
+  BuildContext cardContext,
+  WidgetRef ref,
+  Proxy proxy,
+  String groupName,
+  String? testUrl,
+) {
+  final renderBox = cardContext.findRenderObject() as RenderBox?;
+  if (renderBox == null || !renderBox.attached || !renderBox.hasSize) return;
+  final origin = renderBox.localToGlobal(Offset.zero);
+  final anchor = origin & renderBox.size;
+  HapticFeedback.mediumImpact();
+
+  final navigator = Navigator.of(cardContext);
+  navigator.push(
+    CommonPopupRoute<void>(
+      anchorOf: () => anchor,
+      placement: PopupPlacement.overAnchorEnd,
+      barrierLabel: 'Dismiss',
+      builder: (closeContext) => CommonPopupMenu(
+        items: [
+          CommonPopupMenuItem(
+            glyph: AppGlyphs.speed,
+            label: '测试当前节点速度',
+            subItems: [
+              CommonPopupMenuItem(
+                glyph: AppGlyphs.swap,
+                label: '测试上行+下行',
+                onPressed: () {
+                  Navigator.of(closeContext).pop();
+                  ref.read(proxiesActionProvider.notifier).speedTestSingle(
+                    proxy,
+                    mode: SpeedTestMode.both,
+                  );
+                },
+              ),
+              CommonPopupMenuItem(
+                glyph: AppGlyphs.arrowUp,
+                label: '测试上行',
+                onPressed: () {
+                  Navigator.of(closeContext).pop();
+                  ref.read(proxiesActionProvider.notifier).speedTestSingle(
+                    proxy,
+                    mode: SpeedTestMode.upload,
+                  );
+                },
+              ),
+              CommonPopupMenuItem(
+                glyph: AppGlyphs.arrowDown,
+                label: '测试下行',
+                onPressed: () {
+                  Navigator.of(closeContext).pop();
+                  ref.read(proxiesActionProvider.notifier).speedTestSingle(
+                    proxy,
+                    mode: SpeedTestMode.download,
+                  );
+                },
+              ),
+            ],
+          ),
+          CommonPopupMenuItem(
+            glyph: AppGlyphs.bolt,
+            label: 'URLTEST',
+            onPressed: () {
+              Navigator.of(closeContext).pop();
+              ref
+                  .read(proxiesActionProvider.notifier)
+                  .proxyDelayTest(proxy, testUrl);
+            },
+          ),
+          CommonPopupMenuItem(
+            glyph: AppGlyphs.info,
+            label: '节点详情',
+            onPressed: () {
+              Navigator.of(closeContext).pop();
+              _showNodeDetailsDialog(cardContext, ref, proxy, testUrl);
+            },
+          ),
+          CommonPopupMenuItem(
+            glyph: AppGlyphs.export,
+            label: '导出剪贴板',
+            subItems: [
+              CommonPopupMenuItem(
+                label: '复制节点链接',
+                onPressed: () async {
+                  Navigator.of(closeContext).pop();
+                  await _copyNodeShareLink(cardContext, ref, proxy);
+                },
+              ),
+              CommonPopupMenuItem(
+                label: '复制节点名称',
+                onPressed: () async {
+                  Navigator.of(closeContext).pop();
+                  await Clipboard.setData(ClipboardData(text: proxy.name));
+                  dialogs.showNotifier(currentAppLocalizations.copied);
+                },
+              ),
+            ],
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
+Future<void> _showNodeDetailsDialog(
+  BuildContext context,
+  WidgetRef ref,
+  Proxy proxy,
+  String? testUrl,
+) async {
+  final delay = ref.read(
+    delayProvider(proxyName: proxy.name, testUrl: testUrl),
+  );
+  final speedResult = ref.read(speedTestResultForProxyProvider(proxy.name));
+
+  final infoItems = <String, String>{
+    '节点名称': proxy.name,
+    '协议类型': proxy.type,
+    '延迟': delay != null && delay > 0 ? '$delay ms' : '未测试',
+    if (speedResult?.formattedDownloadSpeed != null)
+      '下行速度': speedResult!.formattedDownloadSpeed!,
+    if (speedResult?.formattedUploadSpeed != null)
+      '上行速度': speedResult!.formattedUploadSpeed!,
+  };
+
+  await dialogs.showCommonDialog<void>(
+    child: CommonDialog(
+      title: Text(proxy.name),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          for (final entry in infoItems.entries) ...[
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 4),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    entry.key,
+                    style: AppTextStyle.subheadline.of(context).toLight,
+                  ),
+                  Text(
+                    entry.value,
+                    style: AppTextStyle.subheadline
+                        .of(context, emphasized: true),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ],
+      ),
+      actions: [
+        FilledButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: Text(context.appLocalizations.confirm),
+        ),
+      ],
+    ),
+  );
+}
+
+Future<void> _copyNodeShareLink(
+  BuildContext context,
+  WidgetRef ref,
+  Proxy proxy,
+) async {
+  try {
+    final profile = ref.read(currentProfileProvider);
+    if (profile != null) {
+      final outbounds = await coreController.getProfileOutbounds(profile.id);
+      final rawProxies = outbounds['proxies'] as List<dynamic>?;
+      if (rawProxies != null) {
+        final match = rawProxies.firstWhere(
+          (p) => p is Map && p['name'] == proxy.name,
+          orElse: () => null,
+        );
+        if (match is Map<String, dynamic>) {
+          final links = await coreController.encodeShareLinks([match]);
+          if (links.isNotEmpty && links.first.isNotEmpty) {
+            await Clipboard.setData(ClipboardData(text: links.first));
+            dialogs.showNotifier(currentAppLocalizations.copied);
+            return;
+          }
+        }
+      }
+    }
+  } catch (_) {}
+  await Clipboard.setData(ClipboardData(text: proxy.name));
+  dialogs.showNotifier(currentAppLocalizations.copied);
 }
