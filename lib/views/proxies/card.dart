@@ -482,7 +482,7 @@ void _showProxyContextMenu(
                 label: '复制节点名称',
                 onPressed: () async {
                   await Clipboard.setData(ClipboardData(text: proxy.name));
-                  dialogs.showNotifier(currentAppLocalizations.copied);
+                  dialogs.showNotifier(currentAppLocalizations.copySuccess);
                 },
               ),
             ],
@@ -572,7 +572,7 @@ Future<void> _copyNodeShareLink(
           final links = await coreController.encodeShareLinks([match]);
           if (links.isNotEmpty && links.first.isNotEmpty) {
             await Clipboard.setData(ClipboardData(text: links.first));
-            dialogs.showNotifier(currentAppLocalizations.copied);
+            dialogs.showNotifier(currentAppLocalizations.copySuccess);
             return;
           }
         }
@@ -580,5 +580,5 @@ Future<void> _copyNodeShareLink(
     }
   } catch (_) {}
   await Clipboard.setData(ClipboardData(text: proxy.name));
-  dialogs.showNotifier(currentAppLocalizations.copied);
+  dialogs.showNotifier(currentAppLocalizations.copySuccess);
 }
