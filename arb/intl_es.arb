@@ -231,6 +231,7 @@
   "loopback": "Exención de loopback de UWP",
   "providers": "Recursos externos",
   "proxyProviders": "Proveedores de proxies",
+  "providerSubscriptionInfo": "Suscripción del proveedor",
   "ruleProviders": "Proveedores de reglas",
   "providerUrlTip": "Solo se admiten proveedores remotos",
   "ruleSetEmptyTip": "El conjunto de reglas no tiene entradas utilizables",
@@ -921,6 +922,7 @@
   "profileUpdatedAt": "Actualizado {time}",
   "profileExpiresIn": "Vence el {date}, {days, plural, =1{queda 1 día} other{quedan {days} días}}",
   "profileDaysLeft": "{days, plural, =1{Queda 1 día} other{Quedan {days} días}}",
+  "profileShortestDaysLeft": "{days, plural, =1{Queda 1 día como mínimo} other{Quedan {days} días como mínimo}}",
   "target": "Destino",
   "outboundExit": "Salida",
   "duration": "Duración",
@@ -939,5 +941,6 @@
   "customImportDroppedSubRules": "{count, plural, =1{Se descartó 1 regla SUB-RULE, porque los perfiles personalizados no admiten subreglas} other{Se descartaron {label} reglas SUB-RULE, porque los perfiles personalizados no admiten subreglas}}",
   "autoInclude": "Incluir automáticamente",
   "allReferencedProxies": "Todos los proxies referenciados",
-  "allReferencedProxyProviders": "Todos los proveedores de proxies referenciados"
+  "allReferencedProxyProviders": "Todos los proveedores de proxies referenciados",
+
 }

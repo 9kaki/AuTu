@@ -1760,6 +1760,16 @@ class AppLocalizations {
     );
   }
 
+  /// `Provider subscription`
+  String get providerSubscriptionInfo {
+    return Intl.message(
+      'Provider subscription',
+      name: 'providerSubscriptionInfo',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `Rule providers`
   String get ruleProviders {
     return Intl.message(
@@ -7688,6 +7698,18 @@ class AppLocalizations {
     );
   }
 
+  /// `{days, plural, =1{1 day left at the earliest} other{{days} days left at the earliest}}`
+  String profileShortestDaysLeft(num days) {
+    return Intl.plural(
+      days,
+      one: '1 day left at the earliest',
+      other: '$days days left at the earliest',
+      name: 'profileShortestDaysLeft',
+      desc: '',
+      args: [days],
+    );
+  }
+
   /// `Target`
   String get target {
     return Intl.message('Target', name: 'target', desc: '', args: []);
@@ -7836,6 +7858,7 @@ class AppLocalizations {
       args: [],
     );
   }
+
 }
 
 class AppLocalizationDelegate extends LocalizationsDelegate<AppLocalizations> {
