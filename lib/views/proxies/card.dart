@@ -1,4 +1,4 @@
-﻿import 'package:outo/common/common.dart';
+import 'package:outo/common/common.dart';
 import 'package:outo/enum/enum.dart';
 import 'package:outo/models/models.dart';
 import 'package:outo/providers/providers.dart';
@@ -414,7 +414,7 @@ void _showProxyContextMenu(
       anchorOf: () => anchor,
       placement: PopupPlacement.overAnchorEnd,
       barrierLabel: 'Dismiss',
-      builder: (closeContext) => CommonPopupMenu(
+      builder: (_) => CommonPopupMenu(
         items: [
           CommonPopupMenuItem(
             glyph: AppGlyphs.speed,
@@ -424,7 +424,6 @@ void _showProxyContextMenu(
                 glyph: AppGlyphs.swap,
                 label: '测试上行+下行',
                 onPressed: () {
-                  Navigator.of(closeContext).pop();
                   ref.read(proxiesActionProvider.notifier).speedTestSingle(
                     proxy,
                     mode: SpeedTestMode.both,
@@ -435,7 +434,6 @@ void _showProxyContextMenu(
                 glyph: AppGlyphs.arrowUp,
                 label: '测试上行',
                 onPressed: () {
-                  Navigator.of(closeContext).pop();
                   ref.read(proxiesActionProvider.notifier).speedTestSingle(
                     proxy,
                     mode: SpeedTestMode.upload,
@@ -446,7 +444,6 @@ void _showProxyContextMenu(
                 glyph: AppGlyphs.arrowDown,
                 label: '测试下行',
                 onPressed: () {
-                  Navigator.of(closeContext).pop();
                   ref.read(proxiesActionProvider.notifier).speedTestSingle(
                     proxy,
                     mode: SpeedTestMode.download,
@@ -459,7 +456,6 @@ void _showProxyContextMenu(
             glyph: AppGlyphs.bolt,
             label: 'URLTEST',
             onPressed: () {
-              Navigator.of(closeContext).pop();
               ref
                   .read(proxiesActionProvider.notifier)
                   .proxyDelayTest(proxy, testUrl);
@@ -469,7 +465,6 @@ void _showProxyContextMenu(
             glyph: AppGlyphs.info,
             label: '节点详情',
             onPressed: () {
-              Navigator.of(closeContext).pop();
               _showNodeDetailsDialog(cardContext, ref, proxy, testUrl);
             },
           ),
@@ -480,14 +475,12 @@ void _showProxyContextMenu(
               CommonPopupMenuItem(
                 label: '复制节点链接',
                 onPressed: () async {
-                  Navigator.of(closeContext).pop();
                   await _copyNodeShareLink(cardContext, ref, proxy);
                 },
               ),
               CommonPopupMenuItem(
                 label: '复制节点名称',
                 onPressed: () async {
-                  Navigator.of(closeContext).pop();
                   await Clipboard.setData(ClipboardData(text: proxy.name));
                   dialogs.showNotifier(currentAppLocalizations.copied);
                 },
@@ -522,9 +515,16 @@ Future<void> _showNodeDetailsDialog(
   };
 
   await dialogs.showCommonDialog<void>(
+    context: context,
     child: CommonDialog(
-      title: Text(proxy.name),
-      content: Column(
+      title: proxy.name,
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: Text(context.appLocalizations.confirm),
+        ),
+      ],
+      child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -549,12 +549,6 @@ Future<void> _showNodeDetailsDialog(
           ],
         ],
       ),
-      actions: [
-        FilledButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: Text(context.appLocalizations.confirm),
-        ),
-      ],
     ),
   );
 }

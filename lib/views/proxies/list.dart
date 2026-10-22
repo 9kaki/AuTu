@@ -1,4 +1,4 @@
-﻿import 'dart:math';
+import 'dart:math';
 
 import 'package:outo/common/common.dart';
 import 'package:outo/enum/enum.dart';
@@ -855,31 +855,22 @@ class _GroupActions extends StatelessWidget {
                         ? CommonCircleLoading(size: TonalButtonSize.compact.icon)
                         : const GlyphIcon(AppGlyphs.speed),
                   ),
-                  popupBuilder: (close) => CommonPopupMenu(
+                  popupBuilder: (_) => CommonPopupMenu(
                     items: [
                       CommonPopupMenuItem(
                         label: '测试上行+下行',
                         glyph: AppGlyphs.swap,
-                        onPressed: () {
-                          close();
-                          onSpeedTest(SpeedTestMode.both);
-                        },
+                        onPressed: () => onSpeedTest(SpeedTestMode.both),
                       ),
                       CommonPopupMenuItem(
                         label: '测试上行',
                         glyph: AppGlyphs.arrowUp,
-                        onPressed: () {
-                          close();
-                          onSpeedTest(SpeedTestMode.upload);
-                        },
+                        onPressed: () => onSpeedTest(SpeedTestMode.upload),
                       ),
                       CommonPopupMenuItem(
                         label: '测试下行',
                         glyph: AppGlyphs.arrowDown,
-                        onPressed: () {
-                          close();
-                          onSpeedTest(SpeedTestMode.download);
-                        },
+                        onPressed: () => onSpeedTest(SpeedTestMode.download),
                       ),
                     ],
                   ),
