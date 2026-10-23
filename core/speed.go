@@ -21,7 +21,6 @@ const (
 	downloadConcurrency     = 4
 	uploadConcurrency       = 2
 	downloadBufferSize      = 128 * 1024
-	browserUserAgent        = "Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Mobile Safari/537.36"
 )
 
 type countedZeroReader struct {
