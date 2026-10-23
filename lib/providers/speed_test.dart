@@ -28,7 +28,7 @@ class SpeedTestConfig {
 
 class SpeedTestConfigNotifier extends Notifier<SpeedTestConfig> {
   static const defaultDownloadUrl =
-      'https://speed.cloudflare.com/__down?bytes=100000000';
+      'https://dl.google.com/chrome/mac/universal/stable/GGRO/googlechrome.dmg';
   static const defaultUploadUrl = 'https://speed.cloudflare.com/__up';
   static const defaultTimeout = 10000;
 
@@ -41,14 +41,16 @@ class SpeedTestConfigNotifier extends Notifier<SpeedTestConfig> {
   Future<void> _load() async {
     final p = Preferences();
     var d = await p.getSpeedTestDownloadUrl();
-    if (d == 'https://speed.cloudflare.com/__down?bytes=25000000') {
+    if (d == null ||
+        d.isEmpty ||
+        d.contains('speed.cloudflare.com/__down')) {
       d = defaultDownloadUrl;
       await p.setSpeedTestDownloadUrl(defaultDownloadUrl);
     }
     final u = await p.getSpeedTestUploadUrl();
     final t = await p.getSpeedTestTimeout();
     state = SpeedTestConfig(
-      downloadUrl: d != null && d.isNotEmpty ? d : defaultDownloadUrl,
+      downloadUrl: d,
       uploadUrl: u != null && u.isNotEmpty ? u : defaultUploadUrl,
       timeout: t != null && t > 0 ? t : defaultTimeout,
     );

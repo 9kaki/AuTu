@@ -2,6 +2,13 @@
 
 All notable changes to the AuTu project will be documented in this file.
 
+## [v1.0.8] - 2026-10-23 (AuTu 1.0.8 预览版)
+
+### 彻底解决下载测速 4B/5B 异常与测速源限流问题
+- **切换至高带宽无风控测速源**：默认下载测速源全面切换为 Google 官方高带宽 CDN（`https://dl.google.com/chrome/mac/universal/stable/GGRO/googlechrome.dmg`），彻底告别 Cloudflare 接口高频压测触发 HTTP 429 限流封锁与 403 挑战；具备自动双向回退能力。
+- **严格校验 HTTP 响应状态码**：增加 HTTP 2xx 状态码校验，杜绝错误响应体（如 429 报错内容）被误计入下载字节导致的“4B、5B”严重错误，确保数据统计真实精准。
+- **伪装真实浏览器环境**：请求头伪装为 Android 14 现代 Chrome 移动浏览器 User-Agent，规避各类 CDN 的自动化爬虫和脚本拦截策略。
+
 ## [v1.0.7] - 2026-10-23 (AuTu 1.0.7 预览版)
 
 ### 测速引擎性能大跃升 (4 线程并发压测)

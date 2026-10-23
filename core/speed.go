@@ -14,13 +14,14 @@ import (
 
 const (
 	defaultSpeedTestTimeout = 10 * time.Second
-	defaultDownloadTestURL  = "https://speed.cloudflare.com/__down?bytes=100000000"
+	defaultDownloadTestURL  = "https://dl.google.com/chrome/mac/universal/stable/GGRO/googlechrome.dmg"
 	defaultUploadTestURL    = "https://speed.cloudflare.com/__up"
 	downloadTestDuration    = 3500 * time.Millisecond
 	uploadTestDuration      = 2500 * time.Millisecond
 	downloadConcurrency     = 4
 	uploadConcurrency       = 2
 	downloadBufferSize      = 128 * 1024
+	browserUserAgent        = "Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Mobile Safari/537.36"
 )
 
 type countedZeroReader struct {
@@ -104,6 +105,10 @@ func handleSpeedTest(params *SpeedTestParams) *SpeedTestResult {
 
 	if testDownload {
 		runDownloadTest(client, downloadURL, result, perPhaseDuration)
+		if result.DownloadSpeed <= 0 && downloadURL != defaultDownloadTestURL {
+			result.Error = ""
+			runDownloadTest(client, defaultDownloadTestURL, result, perPhaseDuration)
+		}
 	}
 
 	if testUpload {
@@ -166,7 +171,8 @@ func runDownloadTest(client *http.Client, url string, result *SpeedTestResult, d
 			})
 			return
 		}
-		req.Header.Set("User-Agent", "AuTu-SpeedTest/1.0")
+		req.Header.Set("User-Agent", browserUserAgent)
+		req.Header.Set("Accept", "*/*")
 
 		reqStart := time.Now()
 		resp, err := client.Do(req)
@@ -179,6 +185,15 @@ func runDownloadTest(client *http.Client, url string, result *SpeedTestResult, d
 			return
 		}
 		defer resp.Body.Close()
+
+		if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+			errOnce.Do(func() {
+				if result.Error == "" {
+					result.Error = fmt.Sprintf("HTTP %d (%s)", resp.StatusCode, resp.Status)
+				}
+			})
+			return
+		}
 
 		reqDelay := time.Since(reqStart).Milliseconds()
 		if atomic.CompareAndSwapInt64(&firstDelayMs, 0, reqDelay) {
@@ -249,7 +264,7 @@ func runUploadTest(client *http.Client, url string, result *SpeedTestResult, dur
 			return
 		}
 		req.Header.Set("Content-Type", "application/octet-stream")
-		req.Header.Set("User-Agent", "AuTu-SpeedTest/1.0")
+		req.Header.Set("User-Agent", browserUserAgent)
 
 		startMu.Lock()
 		if firstStart.IsZero() {
