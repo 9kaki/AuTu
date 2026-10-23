@@ -1,4 +1,4 @@
-﻿import 'dart:math';
+import 'dart:math';
 
 import 'package:outo/common/common.dart';
 import 'package:outo/enum/enum.dart';
@@ -612,6 +612,9 @@ class ListHeader extends ConsumerWidget {
     final isDelayTesting = ref.watch(
       delayTestingGroupsProvider.select((state) => state.contains(groupName)),
     );
+    final isSpeedTesting = ref.watch(
+      speedTestingGroupsProvider.select((state) => state.contains(groupName)),
+    );
     final colorScheme = context.colorScheme;
     final level = floating > 0
         ? SurfaceLevel.floatingOf(colorScheme)
@@ -638,6 +641,7 @@ class ListHeader extends ConsumerWidget {
             _GroupActions(
               isExpand: isExpand,
               isDelayTesting: isDelayTesting,
+              isSpeedTesting: isSpeedTesting,
               groupType: group.type.name,
               onScrollToSelected: () {
                 onScrollToSelected(groupName);
@@ -646,6 +650,11 @@ class ListHeader extends ConsumerWidget {
                 ref
                     .read(proxiesActionProvider.notifier)
                     .delayTestPageGroup(groupName);
+              },
+              onSpeedTest: (mode) {
+                ref
+                    .read(proxiesActionProvider.notifier)
+                    .speedTestPageGroup(groupName, mode: mode);
               },
               onToggle: () {
                 onChange(groupName);
@@ -811,17 +820,21 @@ class _GroupActions extends StatelessWidget {
   const _GroupActions({
     required this.isExpand,
     required this.isDelayTesting,
+    required this.isSpeedTesting,
     required this.groupType,
     required this.onScrollToSelected,
     required this.onDelayTest,
+    required this.onSpeedTest,
     required this.onToggle,
   });
 
   final bool isExpand;
   final bool isDelayTesting;
+  final bool isSpeedTesting;
   final String groupType;
   final VoidCallback onScrollToSelected;
   final VoidCallback onDelayTest;
+  final ValueChanged<SpeedTestMode> onSpeedTest;
   final VoidCallback onToggle;
 
   @override
@@ -834,6 +847,34 @@ class _GroupActions extends StatelessWidget {
             TonalButtonGroup(
               size: TonalButtonSize.compact,
               children: [
+                CommonPopupBox(
+                  targetBuilder: (open) => IconButton(
+                    tooltip: '速度测试',
+                    onPressed: isSpeedTesting ? null : open,
+                    icon: isSpeedTesting
+                        ? CommonCircleLoading(size: TonalButtonSize.compact.icon)
+                        : const GlyphIcon(AppGlyphs.speed),
+                  ),
+                  popupBuilder: (_) => CommonPopupMenu(
+                    items: [
+                      CommonPopupMenuItem(
+                        label: '测试上行+下行',
+                        glyph: AppGlyphs.swap,
+                        onPressed: () => onSpeedTest(SpeedTestMode.both),
+                      ),
+                      CommonPopupMenuItem(
+                        label: '测试上行',
+                        glyph: AppGlyphs.arrowUp,
+                        onPressed: () => onSpeedTest(SpeedTestMode.upload),
+                      ),
+                      CommonPopupMenuItem(
+                        label: '测试下行',
+                        glyph: AppGlyphs.arrowDown,
+                        onPressed: () => onSpeedTest(SpeedTestMode.download),
+                      ),
+                    ],
+                  ),
+                ),
                 IconButton(
                   tooltip: context.appLocalizations.scrollToSelected,
                   onPressed: onScrollToSelected,

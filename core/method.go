@@ -223,6 +223,7 @@ var methodHandlers = map[CoreMethod]methodHandler{
 	dumpRuleSetMethod:              withFallible(handleDumpRuleSet),
 	compileRuleSetMethod:           withFallible(handleCompileRuleSet),
 	clearEffectMethod:              withMessage(handleClearEffect),
+	speedTestMethod:                withArguments(handleSpeedTest),
 }
 
 func watchRouteHandler(call *MethodCall) (any, error) {

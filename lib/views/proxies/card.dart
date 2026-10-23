@@ -1,4 +1,4 @@
-﻿import 'package:outo/common/common.dart';
+import 'package:outo/common/common.dart';
 import 'package:outo/enum/enum.dart';
 import 'package:outo/models/models.dart';
 import 'package:outo/providers/providers.dart';
@@ -6,6 +6,9 @@ import 'package:outo/state.dart';
 import 'package:outo/ui/icons/icons.dart';
 import 'package:outo/widgets/widgets.dart';
 import 'package:material_ui/material_ui.dart';
+import 'package:flutter/services.dart' show Clipboard, ClipboardData, HapticFeedback;
+import 'package:outo/core/core.dart';
+import 'package:outo/ui/ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 void selectGroupProxy(
@@ -142,6 +145,15 @@ class ProxyCard extends ConsumerWidget {
               proxyName: proxy.name,
             );
           },
+          onLongPress: () {
+            _showProxyContextMenu(
+              context,
+              ref,
+              proxy,
+              groupName,
+              testUrl,
+            );
+          },
           isSelected: inUse,
           child: Container(
             alignment: Alignment.centerLeft,
@@ -161,13 +173,118 @@ class ProxyCard extends ConsumerWidget {
                       const SelectionBadge(),
                   ],
                 ),
-                const SizedBox(height: 8),
+                _ProxySpeedText(proxy: proxy),
+                const SizedBox(height: 6),
                 details,
               ],
             ),
           ),
         );
       },
+    );
+  }
+}
+
+class _ProxySpeedText extends ConsumerWidget {
+  const _ProxySpeedText({required this.proxy});
+
+  final Proxy proxy;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isTesting = ref.watch(isSpeedTestingProxyProvider(proxy.name));
+    final speedResult = ref.watch(speedTestResultForProxyProvider(proxy.name));
+
+    if (!isTesting && speedResult == null) {
+      return const SizedBox.shrink();
+    }
+
+    if (isTesting) {
+      return Padding(
+        padding: const EdgeInsets.only(top: 4),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            CommonCircleLoading(size: 11),
+            const SizedBox(width: 4),
+            Text(
+              '测速中...',
+              style: AppTextStyle.caption2.of(context).copyWith(
+                    color: context.colorScheme.primary,
+                  ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    final down = speedResult?.formattedDownloadSpeed;
+    final up = speedResult?.formattedUploadSpeed;
+    final hasDown = down != null;
+    final hasUp = up != null;
+
+    if (!hasDown && !hasUp) {
+      if (speedResult?.error != null) {
+        return Padding(
+          padding: const EdgeInsets.only(top: 4),
+          child: Text(
+            '测速失败',
+            maxLines: 1,
+            style: AppTextStyle.caption2.of(context).copyWith(
+                  color: context.colorScheme.error,
+                ),
+          ),
+        );
+      }
+      return const SizedBox.shrink();
+    }
+
+    final style = AppTextStyle.caption2.of(context, emphasized: true);
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 4),
+      child: FittedBox(
+        fit: BoxFit.scaleDown,
+        alignment: Alignment.centerLeft,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (hasDown) ...[
+              Text(
+                '↓',
+                style: style.copyWith(
+                  color: context.colorScheme.primary,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(width: 2),
+              Text(
+                down,
+                style: style.copyWith(
+                  color: context.colorScheme.onSurface,
+                ),
+              ),
+              if (hasUp) const SizedBox(width: 6),
+            ],
+            if (hasUp) ...[
+              Text(
+                '↑',
+                style: style.copyWith(
+                  color: context.colorScheme.primary,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(width: 2),
+              Text(
+                up,
+                style: style.copyWith(
+                  color: context.colorScheme.onSurface,
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
     );
   }
 }
@@ -349,3 +466,145 @@ class _DelayTextState extends ConsumerState<_DelayText> {
     );
   }
 }
+
+
+void _showProxyContextMenu(
+  BuildContext cardContext,
+  WidgetRef ref,
+  Proxy proxy,
+  String groupName,
+  String? testUrl,
+) {
+  final renderBox = cardContext.findRenderObject() as RenderBox?;
+  if (renderBox == null || !renderBox.attached || !renderBox.hasSize) return;
+  final origin = renderBox.localToGlobal(Offset.zero);
+  final anchor = origin & renderBox.size;
+  HapticFeedback.mediumImpact();
+
+  final navigator = Navigator.of(cardContext);
+  navigator.push(
+    CommonPopupRoute<void>(
+      anchorOf: () => anchor,
+      placement: PopupPlacement.overAnchorEnd,
+      barrierLabel: 'Dismiss',
+      builder: (_) => CommonPopupMenu(
+        items: [
+          CommonPopupMenuItem(
+            glyph: AppGlyphs.speed,
+            label: '测试当前节点速度',
+            subItems: [
+              CommonPopupMenuItem(
+                glyph: AppGlyphs.swap,
+                label: '测试上行+下行',
+                onPressed: () {
+                  ref.read(proxiesActionProvider.notifier).speedTestSingle(
+                    proxy,
+                    mode: SpeedTestMode.both,
+                  );
+                },
+              ),
+              CommonPopupMenuItem(
+                glyph: AppGlyphs.arrowUp,
+                label: '测试上行',
+                onPressed: () {
+                  ref.read(proxiesActionProvider.notifier).speedTestSingle(
+                    proxy,
+                    mode: SpeedTestMode.upload,
+                  );
+                },
+              ),
+              CommonPopupMenuItem(
+                glyph: AppGlyphs.arrowDown,
+                label: '测试下行',
+                onPressed: () {
+                  ref.read(proxiesActionProvider.notifier).speedTestSingle(
+                    proxy,
+                    mode: SpeedTestMode.download,
+                  );
+                },
+              ),
+            ],
+          ),
+          CommonPopupMenuItem(
+            glyph: AppGlyphs.bolt,
+            label: 'URLTEST',
+            onPressed: () {
+              ref
+                  .read(proxiesActionProvider.notifier)
+                  .proxyDelayTest(proxy, testUrl);
+            },
+          ),
+          CommonPopupMenuItem(
+            glyph: AppGlyphs.info,
+            label: '节点详情',
+            onPressed: () {
+              _showNodeDetailsDialog(cardContext, ref, proxy, testUrl);
+            },
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
+Future<void> _showNodeDetailsDialog(
+  BuildContext context,
+  WidgetRef ref,
+  Proxy proxy,
+  String? testUrl,
+) async {
+  final delay = ref.read(
+    delayProvider(proxyName: proxy.name, testUrl: testUrl),
+  );
+  final speedResult = ref.read(speedTestResultForProxyProvider(proxy.name));
+
+  final infoItems = <String, String>{
+    '节点名称': proxy.name,
+    '协议类型': proxy.type,
+    '延迟': delay != null && delay > 0 ? '$delay ms' : '未测试',
+    if (speedResult?.formattedDownloadSpeed != null)
+      '下行速度': speedResult!.formattedDownloadSpeed!,
+    if (speedResult?.formattedUploadSpeed != null)
+      '上行速度': speedResult!.formattedUploadSpeed!,
+  };
+
+  await dialogs.showCommonDialog<void>(
+    context: context,
+    child: CommonDialog(
+      title: proxy.name,
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: Text(context.appLocalizations.confirm),
+        ),
+      ],
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          for (final entry in infoItems.entries) ...[
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 4),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    entry.key,
+                    style: AppTextStyle.subheadline.of(context).toLight,
+                  ),
+                  Text(
+                    entry.value,
+                    style: AppTextStyle.subheadline
+                        .of(context, emphasized: true),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ],
+      ),
+    ),
+  );
+}
+
+

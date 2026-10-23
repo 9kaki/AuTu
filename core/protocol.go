@@ -63,6 +63,7 @@ const (
 	compileRuleSetMethod           CoreMethod = "compileRuleSet"
 	clearEffectMethod              CoreMethod = "clearEffect"
 	watchRouteMethod               CoreMethod = "watchRoute"
+	speedTestMethod                CoreMethod = "speedTest"
 )
 
 type MessageType string
@@ -261,4 +262,20 @@ type GeoUpdateStatus struct {
 	Updating bool   `json:"updating"`
 	Skipped  bool   `json:"skipped,omitempty"`
 	Error    string `json:"error,omitempty"`
+}
+
+type SpeedTestParams struct {
+	ProxyName   string `json:"proxy-name"`
+	Mode        string `json:"mode"`
+	DownloadURL string `json:"download-url"`
+	UploadURL   string `json:"upload-url"`
+	Timeout     int64  `json:"timeout"`
+}
+
+type SpeedTestResult struct {
+	ProxyName     string `json:"proxy-name"`
+	DownloadSpeed int64  `json:"download-speed"`
+	UploadSpeed   int64  `json:"upload-speed"`
+	Delay         int64  `json:"delay"`
+	Error         string `json:"error,omitempty"`
 }

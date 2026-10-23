@@ -50,6 +50,119 @@ class ProxiesAction extends _$ProxiesAction {
     });
   }
 
+  Future<void> speedTestSingle(
+    Proxy proxy, {
+    SpeedTestMode mode = SpeedTestMode.both,
+  }) async {
+    final groups = ref.read(groupsProvider);
+    final selectedMap = ref.read(
+      currentProfileProvider.select((state) => state?.selectedMap ?? {}),
+    );
+    final realState = computeRealSelectedProxyState(
+      proxy.name,
+      groups: groups,
+      selectedMap: selectedMap,
+    );
+    final targetName =
+        realState.proxyName.isNotEmpty ? realState.proxyName : proxy.name;
+
+    final testing = ref.read(speedTestingProxiesProvider.notifier);
+    if (!testing.start(proxy.name)) return;
+    if (targetName != proxy.name) {
+      testing.start(targetName);
+    }
+
+    final cfg = ref.read(speedTestConfigProvider);
+
+    try {
+      final result = await _core.speedTest(
+        SpeedTestParams(
+          proxyName: targetName,
+          mode: mode,
+          downloadUrl: cfg.downloadUrl,
+          uploadUrl: cfg.uploadUrl,
+          timeout: cfg.timeout,
+        ),
+      );
+      if (result != null) {
+        final mappedResult = SpeedTestResult(
+          proxyName: proxy.name,
+          downloadSpeed: result.downloadSpeed,
+          uploadSpeed: result.uploadSpeed,
+          delay: result.delay,
+          error: result.error,
+        );
+        ref.read(speedTestDataSourceProvider.notifier).setResult(mappedResult);
+        if (targetName != proxy.name) {
+          ref.read(speedTestDataSourceProvider.notifier).setResult(result);
+        }
+        if (result.delay != null && result.delay! > 0) {
+          setDelay(Delay(name: proxy.name, url: '', value: result.delay));
+        }
+      }
+    } catch (error) {
+      commonPrint.log('Speed test failed for $targetName: $error');
+      ref.read(speedTestDataSourceProvider.notifier).setResult(
+        SpeedTestResult(
+          proxyName: proxy.name,
+          error: error.toString(),
+        ),
+      );
+    } finally {
+      testing.stop(proxy.name);
+      if (targetName != proxy.name) {
+        testing.stop(targetName);
+      }
+    }
+  }
+
+  Future<void> speedTestPageGroup(
+    String groupName, {
+    SpeedTestMode mode = SpeedTestMode.both,
+    bool matchSearch = true,
+  }) async {
+    final group = ref.read(groupsProvider).getGroup(groupName);
+    if (group == null) {
+      return;
+    }
+    final testing = ref.read(speedTestingGroupsProvider.notifier);
+    if (!testing.start(groupName)) {
+      return;
+    }
+    try {
+      final query = SearchQuery(
+        matchSearch ? ref.read(queryProvider(QueryTag.proxies)) : '',
+      );
+      final proxies = group.all
+          .whereMatches(query, (proxy) => proxy.searchFields)
+          .toList();
+
+      final pool = TaskPool(3);
+      final futures = <Future<void>>[];
+      for (final proxy in proxies) {
+        if (!ref.read(speedTestingGroupsProvider).contains(groupName)) {
+          break;
+        }
+        futures.add(
+          pool.run(() async {
+            if (!ref.read(speedTestingGroupsProvider).contains(groupName)) {
+              return;
+            }
+            await speedTestSingle(proxy, mode: mode);
+          }),
+        );
+      }
+      await Future.wait(futures);
+    } finally {
+      testing.stop(groupName);
+    }
+  }
+
+  void cancelSpeedTests() {
+    ref.read(speedTestingGroupsProvider.notifier).clear();
+    ref.read(speedTestingProxiesProvider.notifier).clear();
+  }
+
   void cancelDelayTests() {
     for (final job in _delayTestJobs) {
       job.cancelled = true;

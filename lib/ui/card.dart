@@ -104,6 +104,7 @@ class CommonCard extends StatelessWidget {
     super.key,
     bool? isSelected,
     this.onPressed,
+    this.onLongPress,
     this.radius,
     this.padding,
     this.enterAnimated = false,
@@ -126,6 +127,7 @@ class CommonCard extends StatelessWidget {
   final bool fillsSelection;
   final bool isError;
   final void Function()? onPressed;
+  final void Function()? onLongPress;
   final Widget child;
   final EdgeInsets? padding;
   final double? radius;
@@ -212,6 +214,7 @@ class CommonCard extends StatelessWidget {
               ),
             ),
         onPressed: inert ? null : onPressed,
+        onLongPress: inert ? null : onLongPress,
         child: content,
       ),
       child: Semantics(

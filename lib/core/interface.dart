@@ -1,4 +1,4 @@
-﻿import 'dart:async';
+import 'dart:async';
 
 import 'package:outo/common/common.dart';
 import 'package:outo/enum/enum.dart';
@@ -108,6 +108,8 @@ mixin CoreInterface {
   FutureOr<bool> closeConnections();
 
   FutureOr<bool> resetConnections();
+
+  Future<SpeedTestResult?> speedTest(SpeedTestParams params);
 }
 
 abstract class CoreHandlerInterface with CoreInterface {
@@ -616,5 +618,51 @@ abstract class CoreHandlerInterface with CoreInterface {
       method: CoreMethod.getMemoryStats,
     );
     return data == null ? null : CoreMemoryStats.fromJson(data);
+  }
+
+  @override
+  Future<SpeedTestResult?> speedTest(SpeedTestParams params) async {
+    try {
+      final data = await _invokeMethod<Map<String, dynamic>>(
+        method: CoreMethod.speedTest,
+        arguments: params.toJson(),
+        timeout: Duration(milliseconds: params.timeout + 15000),
+      );
+      if (data != null) {
+        return SpeedTestResult.fromJson(data);
+      }
+    } catch (_) {}
+
+    final testUrl = params.downloadUrl.isNotEmpty
+        ? params.downloadUrl
+        : 'https://speed.cloudflare.com/__down?bytes=5000000';
+    final stopwatch = Stopwatch()..start();
+    try {
+      final res = await probe(
+        ProbeParams(
+          url: testUrl,
+          proxyName: params.proxyName,
+          timeout: params.timeout,
+          maxBody: 5 * 1024 * 1024,
+        ),
+      );
+      stopwatch.stop();
+      if (res != null && res.body.isNotEmpty) {
+        final elapsed = stopwatch.elapsedMilliseconds / 1000.0;
+        final bytes = res.body.length;
+        final speed = elapsed > 0 ? (bytes / elapsed).toInt() : 0;
+        return SpeedTestResult(
+          proxyName: params.proxyName,
+          downloadSpeed: speed,
+          delay: res.delay,
+        );
+      }
+    } catch (e) {
+      return SpeedTestResult(
+        proxyName: params.proxyName,
+        error: e.toString(),
+      );
+    }
+    return null;
   }
 }
