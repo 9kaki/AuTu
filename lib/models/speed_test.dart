@@ -56,12 +56,14 @@ class SpeedTestResult {
 
   String? get formattedDownloadSpeed {
     if (downloadSpeed == null || downloadSpeed! <= 0) return null;
-    return '${downloadSpeed!.traffic}/s';
+    final traffic = downloadSpeed!.traffic;
+    return '${traffic.value} ${traffic.unit}/s';
   }
 
   String? get formattedUploadSpeed {
     if (uploadSpeed == null || uploadSpeed! <= 0) return null;
-    return '${uploadSpeed!.traffic}/s';
+    final traffic = uploadSpeed!.traffic;
+    return '${traffic.value} ${traffic.unit}/s';
   }
 
   factory SpeedTestResult.fromJson(Map<String, dynamic> json) {

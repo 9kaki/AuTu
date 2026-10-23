@@ -243,43 +243,47 @@ class _ProxySpeedText extends ConsumerWidget {
 
     return Padding(
       padding: const EdgeInsets.only(top: 4),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (hasDown) ...[
-            Text(
-              '↓',
-              style: style.copyWith(
-                color: context.colorScheme.primary,
-                fontWeight: FontWeight.bold,
+      child: FittedBox(
+        fit: BoxFit.scaleDown,
+        alignment: Alignment.centerLeft,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (hasDown) ...[
+              Text(
+                '↓',
+                style: style.copyWith(
+                  color: context.colorScheme.primary,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
-            ),
-            const SizedBox(width: 2),
-            Text(
-              down,
-              style: style.copyWith(
-                color: context.colorScheme.onSurface,
+              const SizedBox(width: 2),
+              Text(
+                down,
+                style: style.copyWith(
+                  color: context.colorScheme.onSurface,
+                ),
               ),
-            ),
-            if (hasUp) const SizedBox(width: 6),
+              if (hasUp) const SizedBox(width: 6),
+            ],
+            if (hasUp) ...[
+              Text(
+                '↑',
+                style: style.copyWith(
+                  color: context.colorScheme.primary,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(width: 2),
+              Text(
+                up,
+                style: style.copyWith(
+                  color: context.colorScheme.onSurface,
+                ),
+              ),
+            ],
           ],
-          if (hasUp) ...[
-            Text(
-              '↑',
-              style: style.copyWith(
-                color: context.colorScheme.primary,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(width: 2),
-            Text(
-              up,
-              style: style.copyWith(
-                color: context.colorScheme.onSurface,
-              ),
-            ),
-          ],
-        ],
+        ),
       ),
     );
   }
