@@ -1,4 +1,4 @@
-﻿import 'dart:async';
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:outo/common/boot_record.dart';
@@ -169,6 +169,36 @@ class Preferences {
   Future<void> saveBootRecord(BootRecord record) async {
     final sharedPreferencesIns = await _store.value;
     await sharedPreferencesIns?.setString(bootRecordKey, json.encode(record));
+  }
+
+  Future<String?> getSpeedTestDownloadUrl() async {
+    final sharedPreferencesIns = await _store.value;
+    return sharedPreferencesIns?.getString('speedTestDownloadUrl');
+  }
+
+  Future<void> setSpeedTestDownloadUrl(String url) async {
+    final sharedPreferencesIns = await _store.value;
+    await sharedPreferencesIns?.setString('speedTestDownloadUrl', url);
+  }
+
+  Future<String?> getSpeedTestUploadUrl() async {
+    final sharedPreferencesIns = await _store.value;
+    return sharedPreferencesIns?.getString('speedTestUploadUrl');
+  }
+
+  Future<void> setSpeedTestUploadUrl(String url) async {
+    final sharedPreferencesIns = await _store.value;
+    await sharedPreferencesIns?.setString('speedTestUploadUrl', url);
+  }
+
+  Future<int?> getSpeedTestTimeout() async {
+    final sharedPreferencesIns = await _store.value;
+    return sharedPreferencesIns?.getInt('speedTestTimeout');
+  }
+
+  Future<void> setSpeedTestTimeout(int timeout) async {
+    final sharedPreferencesIns = await _store.value;
+    await sharedPreferencesIns?.setInt('speedTestTimeout', timeout);
   }
 
   Future<void> clearPreferences() async {

@@ -83,6 +83,37 @@ class TestUrlItem extends ConsumerWidget {
   }
 }
 
+
+class SpeedTestUrlItem extends ConsumerWidget {
+  const SpeedTestUrlItem({super.key});
+
+  @override
+  Widget build(BuildContext context, ref) {
+    final speedConfig = ref.watch(speedTestConfigProvider);
+    return ListItem.input(
+      title: const Text('测下载速度、上传速度的测速链接'),
+      subtitle: Text(speedConfig.downloadUrl),
+      resetValue: SpeedTestConfigNotifier.defaultDownloadUrl,
+      dialogTitle: '测下载速度、上传速度的测速链接',
+      value: speedConfig.downloadUrl,
+      maxLength: TextInputLimits.url,
+      validator: (String? value) {
+        if (value == null || value.isEmpty) {
+          return '测速链接不能为空';
+        }
+        if (!value.isUrl) {
+          return '请输入有效的 URL';
+        }
+        return null;
+      },
+      onChanged: (String? value) {
+        if (value == null || value.isEmpty) return;
+        ref.read(speedTestConfigProvider.notifier).update(downloadUrl: value);
+      },
+    );
+  }
+}
+
 class PortItem extends ConsumerWidget {
   const PortItem({super.key});
 
@@ -334,6 +365,7 @@ class GeneralView extends ConsumerWidget {
   List<Widget> _connectionItems() {
     return [
       const TestUrlItem(),
+      const SpeedTestUrlItem(),
       _clashToggle(
         title: (l) => l.unifiedDelay,
         select: (state) => state.unifiedDelay,

@@ -1,4 +1,4 @@
-﻿import 'dart:async';
+import 'dart:async';
 
 import 'package:outo/common/common.dart';
 import 'package:outo/enum/enum.dart';
@@ -626,7 +626,7 @@ abstract class CoreHandlerInterface with CoreInterface {
       final data = await _invokeMethod<Map<String, dynamic>>(
         method: CoreMethod.speedTest,
         arguments: params.toJson(),
-        timeout: Duration(milliseconds: params.timeout + 3000),
+        timeout: Duration(milliseconds: params.timeout + 15000),
       );
       if (data != null) {
         return SpeedTestResult.fromJson(data);

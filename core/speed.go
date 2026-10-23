@@ -11,10 +11,11 @@ import (
 )
 
 const (
-	defaultSpeedTestTimeout = 10 * time.Second
+	defaultSpeedTestTimeout = 8 * time.Second
 	defaultDownloadTestURL  = "https://speed.cloudflare.com/__down?bytes=25000000"
 	defaultUploadTestURL    = "https://speed.cloudflare.com/__up"
-	speedTestDuration       = 4 * time.Second
+	downloadTestDuration    = 2500 * time.Millisecond
+	uploadTestDuration      = 2000 * time.Millisecond
 )
 
 type countedZeroReader struct {
@@ -66,15 +67,20 @@ func handleSpeedTest(params *SpeedTestParams) *SpeedTestResult {
 		uploadURL = defaultUploadTestURL
 	}
 
+	totalTimeout := defaultSpeedTestTimeout
+	if params.Timeout > 0 {
+		totalTimeout = time.Duration(params.Timeout) * time.Millisecond
+	}
+
 	dialer := &probeDialer{proxy: proxy}
 	tlsConfig, _ := ca.GetTLSConfig(ca.Option{})
 
 	transport := &http.Transport{
 		DialContext:         dialer.dial,
 		TLSClientConfig:     tlsConfig,
-		TLSHandshakeTimeout: 5 * time.Second,
+		TLSHandshakeTimeout: 3 * time.Second,
 		MaxIdleConns:        1,
-		IdleConnTimeout:     5 * time.Second,
+		IdleConnTimeout:     3 * time.Second,
 	}
 	defer transport.CloseIdleConnections()
 
@@ -85,19 +91,24 @@ func handleSpeedTest(params *SpeedTestParams) *SpeedTestResult {
 	testDownload := params.Mode == "" || params.Mode == "both" || params.Mode == "download"
 	testUpload := params.Mode == "both" || params.Mode == "upload"
 
+	perPhaseDuration := downloadTestDuration
+	if totalTimeout < 6*time.Second {
+		perPhaseDuration = 1800 * time.Millisecond
+	}
+
 	if testDownload {
-		runDownloadTest(client, downloadURL, result, speedTestDuration)
+		runDownloadTest(client, downloadURL, result, perPhaseDuration)
 	}
 
 	if testUpload {
-		runUploadTest(client, uploadURL, result, speedTestDuration)
+		runUploadTest(client, uploadURL, result, perPhaseDuration)
 	}
 
 	return result
 }
 
 func runDownloadTest(client *http.Client, url string, result *SpeedTestResult, duration time.Duration) {
-	ctx, cancel := context.WithTimeout(context.Background(), duration+3*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), duration+2*time.Second)
 	defer cancel()
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
@@ -124,6 +135,9 @@ func runDownloadTest(client *http.Client, url string, result *SpeedTestResult, d
 
 	buf := make([]byte, 32*1024)
 	var totalBytes int64
+	var peakSpeed int64
+	var windowBytes int64
+	windowStart := time.Now()
 	startTime := time.Now()
 
 	for {
@@ -133,24 +147,46 @@ func runDownloadTest(client *http.Client, url string, result *SpeedTestResult, d
 		n, rErr := resp.Body.Read(buf)
 		if n > 0 {
 			totalBytes += int64(n)
+			windowBytes += int64(n)
 		}
+
+		wElapsed := time.Since(windowStart)
+		if wElapsed >= 300*time.Millisecond {
+			sec := wElapsed.Seconds()
+			if sec > 0 {
+				curSpeed := int64(float64(windowBytes) / sec)
+				if curSpeed > peakSpeed {
+					peakSpeed = curSpeed
+				}
+			}
+			windowBytes = 0
+			windowStart = time.Now()
+		}
+
 		if rErr != nil {
 			break
 		}
 	}
 
 	elapsed := time.Since(startTime).Seconds()
+	var avgSpeed int64
 	if elapsed > 0 && totalBytes > 0 {
-		result.DownloadSpeed = int64(float64(totalBytes) / elapsed)
+		avgSpeed = int64(float64(totalBytes) / elapsed)
+	}
+
+	if peakSpeed > avgSpeed {
+		result.DownloadSpeed = peakSpeed
+	} else {
+		result.DownloadSpeed = avgSpeed
 	}
 }
 
 func runUploadTest(client *http.Client, url string, result *SpeedTestResult, duration time.Duration) {
-	ctx, cancel := context.WithTimeout(context.Background(), duration+3*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), duration+2*time.Second)
 	defer cancel()
 
 	reader := &countedZeroReader{
-		remain:   30 * 1024 * 1024,
+		remain:   50 * 1024 * 1024,
 		duration: duration,
 	}
 
@@ -165,7 +201,7 @@ func runUploadTest(client *http.Client, url string, result *SpeedTestResult, dur
 
 	resp, err := client.Do(req)
 	if err != nil {
-		// counted bytes
+		// Even if Do returned error on cancel/EOF, reader.readBytes counts what was uploaded
 	} else {
 		defer resp.Body.Close()
 		io.Copy(io.Discard, resp.Body)

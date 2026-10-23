@@ -173,13 +173,114 @@ class ProxyCard extends ConsumerWidget {
                       const SelectionBadge(),
                   ],
                 ),
-                const SizedBox(height: 8),
+                _ProxySpeedText(proxy: proxy),
+                const SizedBox(height: 6),
                 details,
               ],
             ),
           ),
         );
       },
+    );
+  }
+}
+
+class _ProxySpeedText extends ConsumerWidget {
+  const _ProxySpeedText({required this.proxy});
+
+  final Proxy proxy;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isTesting = ref.watch(isSpeedTestingProxyProvider(proxy.name));
+    final speedResult = ref.watch(speedTestResultForProxyProvider(proxy.name));
+
+    if (!isTesting && speedResult == null) {
+      return const SizedBox.shrink();
+    }
+
+    if (isTesting) {
+      return Padding(
+        padding: const EdgeInsets.only(top: 4),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            CommonCircleLoading(size: 11),
+            const SizedBox(width: 4),
+            Text(
+              '测速中...',
+              style: AppTextStyle.caption2.of(context).copyWith(
+                    color: context.colorScheme.primary,
+                  ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    final down = speedResult?.formattedDownloadSpeed;
+    final up = speedResult?.formattedUploadSpeed;
+    final hasDown = down != null;
+    final hasUp = up != null;
+
+    if (!hasDown && !hasUp) {
+      if (speedResult?.error != null) {
+        return Padding(
+          padding: const EdgeInsets.only(top: 4),
+          child: Text(
+            '测速失败',
+            maxLines: 1,
+            style: AppTextStyle.caption2.of(context).copyWith(
+                  color: context.colorScheme.error,
+                ),
+          ),
+        );
+      }
+      return const SizedBox.shrink();
+    }
+
+    final style = AppTextStyle.caption2.of(context, emphasized: true);
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 4),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (hasDown) ...[
+            Text(
+              '↓',
+              style: style.copyWith(
+                color: context.colorScheme.primary,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(width: 2),
+            Text(
+              down,
+              style: style.copyWith(
+                color: context.colorScheme.onSurface,
+              ),
+            ),
+            if (hasUp) const SizedBox(width: 6),
+          ],
+          if (hasUp) ...[
+            Text(
+              '↑',
+              style: style.copyWith(
+                color: context.colorScheme.primary,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(width: 2),
+            Text(
+              up,
+              style: style.copyWith(
+                color: context.colorScheme.onSurface,
+              ),
+            ),
+          ],
+        ],
+      ),
     );
   }
 }
@@ -296,12 +397,6 @@ class _DelayTextState extends ConsumerState<_DelayText> {
         testUrl: widget.testUrl,
       ),
     );
-    final isSpeedTesting = ref.watch(
-      isSpeedTestingProxyProvider(widget.proxy.name),
-    );
-    final speedResult = ref.watch(
-      speedTestResultForProxyProvider(widget.proxy.name),
-    );
     return Actions(
       actions: {
         ActivateIntent: CallbackAction<ActivateIntent>(
@@ -343,50 +438,24 @@ class _DelayTextState extends ConsumerState<_DelayText> {
                       ),
                     }),
                   )
-                : isSpeedTesting
-                    ? SizedBox(
-                        height: measure.textHeight(AppTextStyle.caption2),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            CommonCircleLoading(
-                              size: measure.textHeight(AppTextStyle.caption2),
+                : GestureDetector(
+                    onTap: _handleTestCurrentDelay,
+                    child: _withFocusRing(
+                      context,
+                      Text(
+                        delay > 0
+                            ? '$delay ms'
+                            : delayFailureText(delay, context.appLocalizations),
+                        maxLines: 1,
+                        style: AppTextStyle.caption2
+                            .of(context, emphasized: true)
+                            .copyWith(
+                              overflow: TextOverflow.ellipsis,
+                              color: context.colorScheme.delayColor(delay),
                             ),
-                          ],
-                        ),
-                      )
-                    : GestureDetector(
-                        onTap: _handleTestCurrentDelay,
-                        child: _withFocusRing(
-                          context,
-                          Text(
-                            () {
-                              final delayStr = delay > 0
-                                  ? '$delay ms'
-                                  : delayFailureText(delay, context.appLocalizations);
-                              if (speedResult != null) {
-                                final down = speedResult.formattedDownloadSpeed;
-                                final up = speedResult.formattedUploadSpeed;
-                                if (down != null && up != null) {
-                                  return '$delayStr · ↓$down ↑$up';
-                                } else if (down != null) {
-                                  return '$delayStr · ↓$down';
-                                } else if (up != null) {
-                                  return '$delayStr · ↑$up';
-                                }
-                              }
-                              return delayStr;
-                            }(),
-                            maxLines: 1,
-                            style: AppTextStyle.caption2
-                                .of(context, emphasized: true)
-                                .copyWith(
-                                  overflow: TextOverflow.ellipsis,
-                                  color: context.colorScheme.delayColor(delay),
-                                ),
-                          ),
-                        ),
                       ),
+                    ),
+                  ),
           ),
         ),
       ),
@@ -468,25 +537,6 @@ void _showProxyContextMenu(
               _showNodeDetailsDialog(cardContext, ref, proxy, testUrl);
             },
           ),
-          CommonPopupMenuItem(
-            glyph: AppGlyphs.export,
-            label: '导出剪贴板',
-            subItems: [
-              CommonPopupMenuItem(
-                label: '复制节点链接',
-                onPressed: () async {
-                  await _copyNodeShareLink(cardContext, ref, proxy);
-                },
-              ),
-              CommonPopupMenuItem(
-                label: '复制节点名称',
-                onPressed: () async {
-                  await Clipboard.setData(ClipboardData(text: proxy.name));
-                  dialogs.showNotifier(currentAppLocalizations.copySuccess);
-                },
-              ),
-            ],
-          ),
         ],
       ),
     ),
@@ -553,32 +603,4 @@ Future<void> _showNodeDetailsDialog(
   );
 }
 
-Future<void> _copyNodeShareLink(
-  BuildContext context,
-  WidgetRef ref,
-  Proxy proxy,
-) async {
-  try {
-    final profile = ref.read(currentProfileProvider);
-    if (profile != null) {
-      final outbounds = await coreController.getProfileOutbounds(profile.id);
-      final rawProxies = outbounds['proxies'] as List<dynamic>?;
-      if (rawProxies != null) {
-        final match = rawProxies.firstWhere(
-          (p) => p is Map && p['name'] == proxy.name,
-          orElse: () => null,
-        );
-        if (match is Map<String, dynamic>) {
-          final links = await coreController.encodeShareLinks([match]);
-          if (links.isNotEmpty && links.first.isNotEmpty) {
-            await Clipboard.setData(ClipboardData(text: links.first));
-            dialogs.showNotifier(currentAppLocalizations.copySuccess);
-            return;
-          }
-        }
-      }
-    }
-  } catch (_) {}
-  await Clipboard.setData(ClipboardData(text: proxy.name));
-  dialogs.showNotifier(currentAppLocalizations.copySuccess);
-}
+
