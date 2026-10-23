@@ -28,9 +28,9 @@ class SpeedTestConfig {
 
 class SpeedTestConfigNotifier extends Notifier<SpeedTestConfig> {
   static const defaultDownloadUrl =
-      'https://speed.cloudflare.com/__down?bytes=25000000';
+      'https://speed.cloudflare.com/__down?bytes=100000000';
   static const defaultUploadUrl = 'https://speed.cloudflare.com/__up';
-  static const defaultTimeout = 8000;
+  static const defaultTimeout = 10000;
 
   @override
   SpeedTestConfig build() {
@@ -40,7 +40,11 @@ class SpeedTestConfigNotifier extends Notifier<SpeedTestConfig> {
 
   Future<void> _load() async {
     final p = Preferences();
-    final d = await p.getSpeedTestDownloadUrl();
+    var d = await p.getSpeedTestDownloadUrl();
+    if (d == 'https://speed.cloudflare.com/__down?bytes=25000000') {
+      d = defaultDownloadUrl;
+      await p.setSpeedTestDownloadUrl(defaultDownloadUrl);
+    }
     final u = await p.getSpeedTestUploadUrl();
     final t = await p.getSpeedTestTimeout();
     state = SpeedTestConfig(

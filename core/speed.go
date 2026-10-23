@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/metacubex/http"
@@ -11,11 +13,14 @@ import (
 )
 
 const (
-	defaultSpeedTestTimeout = 8 * time.Second
-	defaultDownloadTestURL  = "https://speed.cloudflare.com/__down?bytes=25000000"
+	defaultSpeedTestTimeout = 10 * time.Second
+	defaultDownloadTestURL  = "https://speed.cloudflare.com/__down?bytes=100000000"
 	defaultUploadTestURL    = "https://speed.cloudflare.com/__up"
-	downloadTestDuration    = 2500 * time.Millisecond
-	uploadTestDuration      = 2000 * time.Millisecond
+	downloadTestDuration    = 3500 * time.Millisecond
+	uploadTestDuration      = 2500 * time.Millisecond
+	downloadConcurrency     = 4
+	uploadConcurrency       = 2
+	downloadBufferSize      = 128 * 1024
 )
 
 type countedZeroReader struct {
@@ -78,9 +83,10 @@ func handleSpeedTest(params *SpeedTestParams) *SpeedTestResult {
 	transport := &http.Transport{
 		DialContext:         dialer.dial,
 		TLSClientConfig:     tlsConfig,
-		TLSHandshakeTimeout: 3 * time.Second,
-		MaxIdleConns:        1,
-		IdleConnTimeout:     3 * time.Second,
+		TLSHandshakeTimeout: 4 * time.Second,
+		MaxIdleConns:        16,
+		MaxIdleConnsPerHost: 8,
+		IdleConnTimeout:     5 * time.Second,
 	}
 	defer transport.CloseIdleConnections()
 
@@ -92,8 +98,8 @@ func handleSpeedTest(params *SpeedTestParams) *SpeedTestResult {
 	testUpload := params.Mode == "both" || params.Mode == "upload"
 
 	perPhaseDuration := downloadTestDuration
-	if totalTimeout < 6*time.Second {
-		perPhaseDuration = 1800 * time.Millisecond
+	if totalTimeout < 7*time.Second {
+		perPhaseDuration = 2000 * time.Millisecond
 	}
 
 	if testDownload {
@@ -108,107 +114,173 @@ func handleSpeedTest(params *SpeedTestParams) *SpeedTestResult {
 }
 
 func runDownloadTest(client *http.Client, url string, result *SpeedTestResult, duration time.Duration) {
-	ctx, cancel := context.WithTimeout(context.Background(), duration+2*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), duration+3*time.Second)
 	defer cancel()
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
-	if err != nil {
-		if result.Error == "" {
-			result.Error = err.Error()
-		}
-		return
-	}
+	var (
+		totalBytes   int64
+		windowBytes  int64
+		peakSpeed    int64
+		firstDelayMs int64
+		errOnce      sync.Once
+		wg           sync.WaitGroup
+	)
 
-	start := time.Now()
-	resp, err := client.Do(req)
-	if err != nil {
-		if result.Error == "" {
-			result.Error = err.Error()
-		}
-		return
-	}
-	defer resp.Body.Close()
-
-	if result.Delay == 0 {
-		result.Delay = time.Since(start).Milliseconds()
-	}
-
-	buf := make([]byte, 32*1024)
-	var totalBytes int64
-	var peakSpeed int64
-	var windowBytes int64
-	windowStart := time.Now()
 	startTime := time.Now()
 
-	for {
-		if time.Since(startTime) >= duration {
-			break
-		}
-		n, rErr := resp.Body.Read(buf)
-		if n > 0 {
-			totalBytes += int64(n)
-			windowBytes += int64(n)
-		}
-
-		wElapsed := time.Since(windowStart)
-		if wElapsed >= 300*time.Millisecond {
-			sec := wElapsed.Seconds()
-			if sec > 0 {
-				curSpeed := int64(float64(windowBytes) / sec)
-				if curSpeed > peakSpeed {
-					peakSpeed = curSpeed
+	ticker := time.NewTicker(200 * time.Millisecond)
+	tickerDone := make(chan struct{})
+	go func() {
+		lastSample := time.Now()
+		for {
+			select {
+			case <-tickerDone:
+				ticker.Stop()
+				return
+			case t := <-ticker.C:
+				dt := t.Sub(lastSample).Seconds()
+				wb := atomic.SwapInt64(&windowBytes, 0)
+				if dt > 0 && wb > 0 {
+					cur := int64(float64(wb) / dt)
+					for {
+						old := atomic.LoadInt64(&peakSpeed)
+						if cur <= old || atomic.CompareAndSwapInt64(&peakSpeed, old, cur) {
+							break
+						}
+					}
 				}
+				lastSample = t
 			}
-			windowBytes = 0
-			windowStart = time.Now()
+		}
+	}()
+
+	worker := func() {
+		defer wg.Done()
+
+		req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+		if err != nil {
+			errOnce.Do(func() {
+				if result.Error == "" {
+					result.Error = err.Error()
+				}
+			})
+			return
+		}
+		req.Header.Set("User-Agent", "AuTu-SpeedTest/1.0")
+
+		reqStart := time.Now()
+		resp, err := client.Do(req)
+		if err != nil {
+			errOnce.Do(func() {
+				if result.Error == "" {
+					result.Error = err.Error()
+				}
+			})
+			return
+		}
+		defer resp.Body.Close()
+
+		reqDelay := time.Since(reqStart).Milliseconds()
+		if atomic.CompareAndSwapInt64(&firstDelayMs, 0, reqDelay) {
+			if result.Delay == 0 {
+				result.Delay = reqDelay
+			}
 		}
 
-		if rErr != nil {
-			break
+		buf := make([]byte, downloadBufferSize)
+		for {
+			if time.Since(startTime) >= duration {
+				break
+			}
+			n, rErr := resp.Body.Read(buf)
+			if n > 0 {
+				atomic.AddInt64(&totalBytes, int64(n))
+				atomic.AddInt64(&windowBytes, int64(n))
+			}
+			if rErr != nil {
+				break
+			}
 		}
 	}
+
+	wg.Add(downloadConcurrency)
+	for i := 0; i < downloadConcurrency; i++ {
+		go worker()
+	}
+
+	wg.Wait()
+	close(tickerDone)
 
 	elapsed := time.Since(startTime).Seconds()
+	tot := atomic.LoadInt64(&totalBytes)
 	var avgSpeed int64
-	if elapsed > 0 && totalBytes > 0 {
-		avgSpeed = int64(float64(totalBytes) / elapsed)
+	if elapsed > 0 && tot > 0 {
+		avgSpeed = int64(float64(tot) / elapsed)
 	}
 
-	if peakSpeed > avgSpeed {
-		result.DownloadSpeed = peakSpeed
+	peak := atomic.LoadInt64(&peakSpeed)
+	if peak > avgSpeed {
+		result.DownloadSpeed = peak
 	} else {
 		result.DownloadSpeed = avgSpeed
 	}
 }
 
 func runUploadTest(client *http.Client, url string, result *SpeedTestResult, duration time.Duration) {
-	ctx, cancel := context.WithTimeout(context.Background(), duration+2*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), duration+3*time.Second)
 	defer cancel()
 
-	reader := &countedZeroReader{
-		remain:   50 * 1024 * 1024,
-		duration: duration,
-	}
+	var (
+		totalUploadedBytes int64
+		firstStart         time.Time
+		startMu            sync.Mutex
+		wg                 sync.WaitGroup
+	)
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, reader)
-	if err != nil {
-		if result.Error == "" {
-			result.Error = err.Error()
+	worker := func() {
+		defer wg.Done()
+		reader := &countedZeroReader{
+			remain:   50 * 1024 * 1024,
+			duration: duration,
 		}
-		return
-	}
-	req.Header.Set("Content-Type", "application/octet-stream")
 
-	resp, err := client.Do(req)
-	if err != nil {
-		// Even if Do returned error on cancel/EOF, reader.readBytes counts what was uploaded
-	} else {
-		defer resp.Body.Close()
-		io.Copy(io.Discard, resp.Body)
+		req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, reader)
+		if err != nil {
+			return
+		}
+		req.Header.Set("Content-Type", "application/octet-stream")
+		req.Header.Set("User-Agent", "AuTu-SpeedTest/1.0")
+
+		startMu.Lock()
+		if firstStart.IsZero() {
+			firstStart = time.Now()
+		}
+		startMu.Unlock()
+
+		resp, err := client.Do(req)
+		if err == nil {
+			defer resp.Body.Close()
+			io.Copy(io.Discard, resp.Body)
+		}
+		atomic.AddInt64(&totalUploadedBytes, reader.readBytes)
 	}
 
-	elapsed := time.Since(reader.startTime).Seconds()
-	if elapsed > 0 && reader.readBytes > 0 {
-		result.UploadSpeed = int64(float64(reader.readBytes) / elapsed)
+	wg.Add(uploadConcurrency)
+	for i := 0; i < uploadConcurrency; i++ {
+		go worker()
+	}
+
+	wg.Wait()
+
+	startMu.Lock()
+	t0 := firstStart
+	startMu.Unlock()
+
+	if !t0.IsZero() {
+		elapsed := time.Since(t0).Seconds()
+		tot := atomic.LoadInt64(&totalUploadedBytes)
+		if elapsed > 0 && tot > 0 {
+			result.UploadSpeed = int64(float64(tot) / elapsed)
+		}
 	}
 }
